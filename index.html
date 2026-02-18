@@ -24,7 +24,7 @@
 
     <script>
         let current_hist_id = 0
-        
+
         const player = document.getElementById("player");
         const skipButton = document.getElementById("skip");
 
@@ -51,7 +51,7 @@
 
         async function skip() {
             try {
-                const response = await fetch("http://localhost:8000/musiql/sample/", {
+                const response = await fetch("http://jacob-server:8000/musiql/sample/", {
                     method : "GET"
                 });
 
@@ -67,7 +67,7 @@
                 const uri = jsonBody.uri
 
                 const progress = player.currentTime/player.duration
-                const skip_response = await fetch("http://localhost:8000/musiql/log/engagement/", {
+                const skip_response = await fetch("http://jacob-server:8000/musiql/log/engagement/", {
                     method : "POST",
                     headers: {
                         "Content-Type": "application/json"
@@ -80,7 +80,7 @@
                     return;
                 }
                 
-                const media_response = await fetch(`http://localhost:8000/musiql/serve/${encodeURIComponent(uri)}`, {
+                const media_response = await fetch(`http://jacob-server:8000/musiql/serve/${encodeURIComponent(uri)}`, {
                     method: "GET",
                 });
                 
@@ -106,7 +106,7 @@
         async function upload_resource() {
             const url = document.getElementById("uploader").value;
 
-            const response = await fetch("http://localhost:8000/musiql/", {
+            const response = await fetch("http://jacob-server:8000/musiql/", {
                 method: "POST",
                 headers: {"Content-Type" : "application/json"},
                 body: JSON.stringify({url: url})
@@ -130,7 +130,7 @@
                 progress = player.currentTime/player.duration
             }
 
-            const response = await fetch("http://localhost:8000/musiql/search/", {
+            const response = await fetch("http://jacob-server:8000/musiql/search/", {
                 method: "POST",
                 headers: {"Content-Type": "application/json"},
                 body: JSON.stringify({history_id: current_hist_id, search_term: term, duration_played: progress})
@@ -151,7 +151,7 @@
             document.getElementById("term").value = null;
             console.log(`search found a hit ${titleBar.textContent}`);
 
-            const media_response = await fetch(`http://localhost:8000/musiql/serve/${encodeURIComponent(uri)}`, {
+            const media_response = await fetch(`http://jacob-server:8000/musiql/serve/${encodeURIComponent(uri)}`, {
                 method: "GET",
             });
             
@@ -176,7 +176,7 @@
 
             player.onended = async () => {
                 try {
-                    const response = await fetch("http://localhost:8000/musiql/sample/", {
+                    const response = await fetch("http://jacob-server:8000/musiql/sample/", {
                         method: "GET",  
                     })
 
@@ -191,7 +191,7 @@
                     artistBar.textContent = jsonBody.artists;
                     const uri = jsonBody.uri
 
-                    const media_response = await fetch(`http://localhost:8000/musiql/serve/${encodeURIComponent(uri)}`, {
+                    const media_response = await fetch(`http://jacob-server:8000/musiql/serve/${encodeURIComponent(uri)}`, {
                         method: "GET",
                     });
                     

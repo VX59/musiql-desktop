@@ -12,7 +12,7 @@ app.whenReady().then(() => {
         }
     });
 
-    mainWindow.loadURL("http://localhost:8000/musiql/player");
+    mainWindow.loadURL("http://jacob-server:8000/musiql/player");
     
     globalShortcut.register("Control+F9", () => {
         mainWindow.webContents.executeJavaScript("window.skip()");
