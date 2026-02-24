@@ -6,6 +6,10 @@
 <body>
     <h1>Musiql Player</h1>
     <div>
+        <button id="start-session" onclick="sample()">Start New Session</button>
+    </div>
+    <br>
+    <div>
         <input type="text" id="term" placeholder="Search term">
         <button onclick="play()">Search & Play</button>
     </div>
@@ -30,6 +34,8 @@
 
         const titleBar = document.getElementById("title");
         const artistBar = document.getElementById("artist")
+        
+        let oldSrc = null;
 
         function updateSkipButton() {
             const src = player.getAttribute("src");
@@ -51,7 +57,7 @@
 
         async function skip() {
             try {
-                const response = await fetch("http://jacob-server:8000/musiql/sample/", {
+                const response = await fetch("http://localhost:8000/musiql/sample/", {
                     method : "GET"
                 });
 
@@ -67,7 +73,7 @@
                 const uri = jsonBody.uri
 
                 const progress = player.currentTime/player.duration
-                const skip_response = await fetch("http://jacob-server:8000/musiql/log/engagement/", {
+                const skip_response = await fetch("http://localhost:8000/musiql/log/engagement/", {
                     method : "POST",
                     headers: {
                         "Content-Type": "application/json"
@@ -80,7 +86,7 @@
                     return;
                 }
                 
-                const media_response = await fetch(`http://jacob-server:8000/musiql/serve/${encodeURIComponent(uri)}`, {
+                const media_response = await fetch(`http://localhost:8000/musiql/serve/${encodeURIComponent(uri)}`, {
                     method: "GET",
                 });
                 
@@ -93,10 +99,7 @@
 
                 const blob = await media_response.blob();
 
-                if (player.oldSrc) URL.revokeObjectURL(player.oldSrc);
-                player.oldSrc = URL.createObjectURL(blob);
-                player.src = player.oldSrc
-                player.play();
+                playBlob(blob);
 
             } catch (err) {
                 console.error(err);
@@ -106,7 +109,7 @@
         async function upload_resource() {
             const url = document.getElementById("uploader").value;
 
-            const response = await fetch("http://jacob-server:8000/musiql/", {
+            const response = await fetch("http://localhost:8000/musiql/", {
                 method: "POST",
                 headers: {"Content-Type" : "application/json"},
                 body: JSON.stringify({url: url})
@@ -121,6 +124,81 @@
             }
         }
 
+        function playBlob(newBlob) {
+            if (oldSrc) URL.revokeObjectURL(oldSrc);
+            oldSrc = URL.createObjectURL(newBlob);
+            player.src = oldSrc;
+            player.play();
+        }
+
+        async function sample() {
+            const term = document.getElementById('term').value;
+            const player = document.getElementById('player');
+            
+            let progress = 1.0
+            if (current_hist_id > 0) {
+                progress = player.currentTime/player.duration
+            }
+
+            try {
+                const response = await fetch("http://localhost:8000/musiql/sample/", {
+                    method: "GET",  
+                })
+
+                if (!response.ok) {
+                    console.log("Error: " + response.status);
+                    return;
+                }
+                
+                const jsonBody = await response.json()
+
+                titleBar.textContent = jsonBody.title;
+                artistBar.textContent = jsonBody.artists;
+                const uri = jsonBody.uri
+
+
+                const progress = player.currentTime/player.duration
+                const skip_response = await fetch("http://localhost:8000/musiql/log/engagement/", {
+                    method : "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body : JSON.stringify({history_id : current_hist_id, duration_played: progress})
+                })
+
+                if (!skip_response.ok) {
+                    console.log("Error: ", skip_response.status);
+                    return;
+                }
+
+
+                const media_response = await fetch(`http://localhost:8000/musiql/serve/${encodeURIComponent(uri)}`, {
+                    method: "GET",
+                });
+                
+                if (!media_response.ok) {
+                    console.log("Error: " + response.status);
+                    return;
+                }
+
+                current_hist_id = media_response.headers.get("X-history-id");
+
+                const newBlob = await media_response.blob();
+                playBlob(newBlob);
+
+            } catch (err) {
+                console.error(err);
+            }
+            
+            let startSession = document.getElementById("start-session")
+            startSession.disabled = true;
+
+            player.onended = async () => {
+                sample();
+            }
+        }
+
+
         async function play() {
             const term = document.getElementById('term').value;
             const player = document.getElementById('player');
@@ -130,7 +208,7 @@
                 progress = player.currentTime/player.duration
             }
 
-            const response = await fetch("http://jacob-server:8000/musiql/search/", {
+            const response = await fetch("http://localhost:8000/musiql/search/", {
                 method: "POST",
                 headers: {"Content-Type": "application/json"},
                 body: JSON.stringify({history_id: current_hist_id, search_term: term, duration_played: progress})
@@ -151,7 +229,7 @@
             document.getElementById("term").value = null;
             console.log(`search found a hit ${titleBar.textContent}`);
 
-            const media_response = await fetch(`http://jacob-server:8000/musiql/serve/${encodeURIComponent(uri)}`, {
+            const media_response = await fetch(`http://localhost:8000/musiql/serve/${encodeURIComponent(uri)}`, {
                 method: "GET",
             });
             
@@ -163,51 +241,11 @@
             current_hist_id = media_response.headers.get("X-history-id");
 
             let blob = await media_response.blob();
-            let oldSrc = null;
 
-            function playBlob(newBlob) {
-                if (oldSrc) URL.revokeObjectURL(oldSrc);
-                oldSrc = URL.createObjectURL(newBlob);
-                player.src = oldSrc;
-                player.play();
-            }
-
-            playBlob(blob)
+            playBlob(blob);
 
             player.onended = async () => {
-                try {
-                    const response = await fetch("http://jacob-server:8000/musiql/sample/", {
-                        method: "GET",  
-                    })
-
-                    if (!response.ok) {
-                        console.log("Error: " + response.status);
-                        return;
-                    }
-                    
-                    const jsonBody = await response.json()
-
-                    titleBar.textContent = jsonBody.title;
-                    artistBar.textContent = jsonBody.artists;
-                    const uri = jsonBody.uri
-
-                    const media_response = await fetch(`http://jacob-server:8000/musiql/serve/${encodeURIComponent(uri)}`, {
-                        method: "GET",
-                    });
-                    
-                    if (!media_response.ok) {
-                        console.log("Error: " + response.status);
-                        return;
-                    }
-
-                    current_hist_id = media_response.headers.get("x-history-id");
-
-                    const newBlob = await media_response.blob();
-                    playBlob(newBlob);
-
-                } catch (err) {
-                    console.error(err)
-                }
+                sample();
             }
         }
 
