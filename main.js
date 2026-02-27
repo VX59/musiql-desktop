@@ -4,8 +4,8 @@ let mainWindow;
 
 app.whenReady().then(() => {
     mainWindow = new BrowserWindow({
-        width: 1000,
-        height: 700,
+        width: 400,
+        height: 800,
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
