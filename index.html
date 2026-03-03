@@ -1,257 +1,371 @@
-<!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Musiql Player</title>
-</head>
-<body>
-    <h1>Musiql Player</h1>
-    <div>
-        <button id="start-session" onclick="sample()">Start New Session</button>
-    </div>
-    <br>
-    <div>
-        <input type="text" id="advanced-term" placeholder="Search term">
-        <button onclick="advanced_search()">Search titles and artists</button>
-    </div>
-    <div>
-        <h4 id="title"></h5>
-        <h5 id="artist"></h5>
-        <div>
-            <audio id="player" controls></audio>
-            <button id="skip" onclick="skip()">Skip</button>
-        </div>
-    </div>
 
-    <div id="searchModal" class="modal-overlay">
-        <div class="modal">
-            <div class="modal-header">
-                <h4 id="resultCount"></h4>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        .card {
+            background-color: #121212;
+            border: none;
+            border-radius: 2px;
+        }
+
+        h1, h4{
+            font-weight: 700;
+            color: #99caff;
+            letter-spacing: -0.5px;
+        }
+
+        /* Spotify Green */
+        .btn-primary {
+            background-color: #121212;
+            border: none;
+            font-weight: 600;
+        }
+
+        .btn-success {
+            background-color: #99caff;
+        }
+
+        .btn {
+            color: #99caff;
+            background-color: #121212;
+            border-radius: 2px;
+        }
+
+        .audio-container {
+            padding: 20px;
+        }
+
+        .form-control {
+            background-color: #2a2a2a;
+            color: white;
+        }
+
+        .form-control::placeholder {
+            color: #b3b3b3;
+        }
+
+        .form-control:focus {
+            background-color: #2a2a2a;
+            color: white;
+            box-shadow: none;
+        }
+
+        .result-row {
+            padding: 12px;
+            border-radius: 2px;
+            transition: background-color 0.2s ease;
+        }
+
+        .result-row:hover {
+            background-color: #2a2a2a;
+        }
+
+        .modal-content {
+            background-color: #121212;
+        }
+
+        #artist {
+            color: #b3b3b3;
+            font-weight: 400;
+        }
+
+        audio {
+            filter: invert(1) grayscale(1);
+        }
+    </style>
+</head>
+
+<body class="d-flex align-items-center justify-content-center vh-100">
+
+<div class="container" style="max-width: 700px;">
+    <div class="card shadow-lg p-4">
+
+        <h1 class="text-center mb-4"> Musiql Player</h1>
+
+        <svg>
+
+        </svg>
+
+        <!-- Start Session -->
+        <div class="d-grid mb-3">
+            <button id="start-session" class="btn btn-primary btn-lg" onclick="sample()">
+                Start New Session
+            </button>
+        </div>
+
+        <!-- Advanced Search -->
+        <div class="input-group mb-4">
+            <input type="text" id="advanced-term" class="form-control" placeholder="Search titles and artists">
+            <button class="btn btn-outline-light" onclick="advanced_search()">
+                Search
+            </button>
+        </div>
+
+        <!-- Now Playing -->
+        <div class="text-center mb-3">
+            <h4 id="title" class="fw-bold"></h4>
+            <h6 id="artist" class="text-secondary"></h6>
+        </div>
+
+        <!-- Audio Player -->
+        <div class="audio-container text-center mb-4">
+            <audio id="player" controls class="w-100 mb-2"></audio>
+            <button id="skip" class="btn" onclick="skip()">Skip</button>
+        </div>
+
+        <!-- Upload Section -->
+        <div class="input-group">
+            <input type="text" id="uploader" class="form-control" placeholder="Paste YouTube link here">
+            <button class="btn btn-success" onclick="upload_resource()">
+                Add Resource
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<!-- Search Modal -->
+<div class="modal fade" id="searchModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content p-3">
+            <div class="modal-header border-0">
+                <h5 id="resultCount" class="modal-title"></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div id="resultsContainer" class="modal-body"></div>
         </div>
     </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    let current_hist_id = 0
+
+    const player = document.getElementById("player");
+    const skipButton = document.getElementById("skip");
+
+    const titleBar = document.getElementById("title");
+    const artistBar = document.getElementById("artist")
     
+    let oldSrc = null;
 
-    <div>
-        <input type="text" id="uploader" placeholder="Paste Youtube link here">
-        <button onclick="upload_resource()">Add Resource</button>
-    </div>
+    function updateSkipButton() {
+        const src = player.getAttribute("src");
+        skipButton.disabled = (!src || src == "about:blank");
+    }
 
-    <script>
-        let current_hist_id = 0
+    updateSkipButton();
 
-        const player = document.getElementById("player");
-        const skipButton = document.getElementById("skip");
+    new MutationObserver(updateSkipButton).observe(player, {
+        attributes: true,
+        attributeFilter: ["src"]
+    });
+    
+    if(window.electronAPI) {
+        window.electronAPI.onSkip(() => {
+            skip();
+        })
+    }
 
-        const titleBar = document.getElementById("title");
-        const artistBar = document.getElementById("artist")
+    function closeModal() {
+        document.getElementById("errorModal").style.display = "none";
+    }
+
+
+    async function showSearchResults(data) {
+        const modal = document.getElementById("searchModal");
+        const container = document.getElementById("resultsContainer");
+        const count = document.getElementById("resultCount");
+
+        container.innerHTML = "";
+        count.textContent = `${data.num_results} Results`;
         
-        let oldSrc = null;
-
-        function updateSkipButton() {
-            const src = player.getAttribute("src");
-            skipButton.disabled = (!src || src == "about:blank");
-        }
-
-        updateSkipButton();
-
-        new MutationObserver(updateSkipButton).observe(player, {
-            attributes: true,
-            attributeFilter: ["src"]
-        });
-        
-        if(window.electronAPI) {
-            window.electronAPI.onSkip(() => {
-                skip();
-            })
-        }
-
-        function closeModal() {
-            document.getElementById("errorModal").style.display = "none";
-        }
-
-
-        async function showSearchResults(data) {
-            const modal = document.getElementById("searchModal");
-            const container = document.getElementById("resultsContainer");
-            const count = document.getElementById("resultCount");
-
-            container.innerHTML = "";
-            count.textContent = `${data.num_results} Results`;
+        if (data.num_results == 1) {
             
-            if (data.num_results == 1) {
-                
-                record = data.results[0]
+            record = data.results[0]
 
-                await serve_music(record);
-
-                player.onended = async () => {
-                    sample();
-                }
-
-            } else {
-                data.results.forEach(record => {
-                    const row = document.createElement("div");
-                    row.className = "result-row";
-                    row.style.cursor = "pointer";
-
-                    row.innerHTML = `
-                    <div class="advanced-search-result">
-                        <span class="result-title">${record.title}</span>
-                        <span> - <span>
-                        <span class="result-artist">${record.artists}</span>
-                    </div>
-                    <div 
-                    `;
-                    
-                    row.onclick = async () => {
-                        serve_music(record);
-                    }
-
-                    container.appendChild(row);
-                });
-
-                modal.style.display = "flex";
-            }
-        }
-
-        async function advanced_search() {
-            const term = document.getElementById('advanced-term').value;
-            const player = document.getElementById('player');
-
-            let progress = 1.0;
-            if (current_hist_id > 0) {
-                progress = player.currentTime/player.duration
-            }
-
-            const response = await fetch("http://localhost:8000/musiql/search/advanced", {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({search_term: term, history_id: current_hist_id, duration_played: progress})
-            });
-            
-            if (!response.ok) {
-                console.log("Error: " + response.status);
-                return;
-            }
-            
-            term.value = null;
-
-            const jsonBody = await response.json();
-            showSearchResults(jsonBody);
-        }
-
-        async function skip() {
-            try {
-                const response = await fetch("http://localhost:8000/musiql/sample/", {
-                    method : "GET"
-                });
-
-                if (!response.ok) {
-                    console.log("Error: ", response.status);
-                    return;
-                }
-
-                const record = await response.json()
-                await serve_music(record);
-
-            } catch (err) {
-                console.error(err);
-            }
-        }
-
-        async function upload_resource() {
-            const url = document.getElementById("uploader").value;
-
-            const response = await fetch("http://localhost:8000/musiql/", {
-                method: "POST",
-                headers: {"Content-Type" : "application/json"},
-                body: JSON.stringify({url: url})
-            });
-
-            if (!response.ok) {
-                console.log("Error: " + response.body);
-                return;
-            } else {
-                document.getElementById("uploader").value = null;
-                console.log(`successully uploaded resource ${url}`);
-            }
-        }
-
-        function playBlob(newBlob) {
-            if (oldSrc) URL.revokeObjectURL(oldSrc);
-            oldSrc = URL.createObjectURL(newBlob);
-            player.src = oldSrc;
-            player.play();
-        }
-
-        async function serve_music(record) {
-            let progress = 1.0;
-            if (current_hist_id > 0) {
-                progress = player.currentTime/player.duration;
-            }
-
-            const skip_response = await fetch("http://localhost:8000/musiql/log/engagement/", {
-                method : "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body : JSON.stringify({history_id : current_hist_id, duration_played: progress})
-            })
-
-            if (!skip_response.ok) {
-                console.log("Error: ", skip_response.status);
-                return;
-            }
-            
-            const media_response = await fetch(`http://localhost:8000/musiql/serve/${encodeURIComponent(record.uri)}`, {
-                method: "GET",
-            });
-            
-            if (!media_response.ok) {
-                console.log("Error: " + response.status);
-                return;
-            }
-
-            titleBar.textContent = record.title;
-            artistBar.textContent = record.artists;
-
-            current_hist_id = media_response.headers.get("X-history-id");
-
-            const blob = await media_response.blob();
-            
-            playBlob(blob);
-        }
-
-        async function sample() {
-            const term = document.getElementById('advanced-term').value;
-            const player = document.getElementById('player');
-
-            try {
-                const response = await fetch("http://localhost:8000/musiql/sample/", {
-                    method: "GET",  
-                })
-
-                if (!response.ok) {
-                    console.log("Error: " + response.status);
-                    return;
-                }
-                
-                const record = await response.json();
-                await serve_music(record);
-
-            } catch (err) {
-                console.error(err);
-            }
-            
-            let startSession = document.getElementById("start-session");
-            startSession.disabled = true;
+            await serve_music(record);
 
             player.onended = async () => {
                 sample();
             }
+
+        } else {
+            data.results.forEach(record => {
+                const row = document.createElement("div");
+                row.className = "result-row";
+                row.style.cursor = "pointer";
+
+                row.innerHTML = `
+                <div class="advanced-search-result">
+                    <span class="result-title">${record.title}</span>
+                    <span> - <span>
+                    <span class="result-artist">${record.artists}</span>
+                </div>
+                <div 
+                `;
+                
+                row.onclick = async () => {
+                    serve_music(record);
+                }
+
+                container.appendChild(row);
+            });
+            
+            const modalInstance = new bootstrap.Modal(document.getElementById('searchModal'));
+            modalInstance.show();
+        }
+    }
+
+    async function advanced_search() {
+        const term = document.getElementById('advanced-term').value;
+        const player = document.getElementById('player');
+
+        let progress = 1.0;
+        if (current_hist_id > 0) {
+            progress = player.currentTime/player.duration
         }
 
-    </script>
+        const response = await fetch("http://localhost:8000/musiql/search/advanced", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({search_term: term, history_id: current_hist_id, duration_played: progress})
+        });
+        
+        if (!response.ok) {
+            console.log("Error: " + response.status);
+            return;
+        }
+        
+        term.value = null;
+
+        const jsonBody = await response.json();
+        showSearchResults(jsonBody);
+    }
+
+    async function skip() {
+        try {
+            const response = await fetch("http://localhost:8000/musiql/sample/", {
+                method : "GET"
+            });
+
+            if (!response.ok) {
+                console.log("Error: ", response.status);
+                return;
+            }
+
+            const record = await response.json()
+            await serve_music(record);
+
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    async function upload_resource() {
+        const url = document.getElementById("uploader").value;
+
+        const response = await fetch("http://localhost:8000/musiql/", {
+            method: "POST",
+            headers: {"Content-Type" : "application/json"},
+            body: JSON.stringify({url: url})
+        });
+
+        if (!response.ok) {
+            console.log("Error: " + response.body);
+            return;
+        } else {
+            document.getElementById("uploader").value = null;
+            console.log(`successully uploaded resource ${url}`);
+        }
+    }
+
+    function playBlob(newBlob) {
+        if (oldSrc) URL.revokeObjectURL(oldSrc);
+        oldSrc = URL.createObjectURL(newBlob);
+        player.src = oldSrc;
+        player.play();
+    }
+
+    async function serve_music(record) {
+        let progress = 1.0;
+        if (current_hist_id > 0) {
+            progress = player.currentTime/player.duration;
+        }
+
+        const skip_response = await fetch("http://localhost:8000/musiql/log/engagement/", {
+            method : "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body : JSON.stringify({history_id : current_hist_id, duration_played: progress})
+        })
+
+        if (!skip_response.ok) {
+            console.log("Error: ", skip_response.status);
+            return;
+        }
+        
+        const media_response = await fetch(`http://localhost:8000/musiql/serve/${encodeURIComponent(record.uri)}`, {
+            method: "GET",
+        });
+        
+        if (!media_response.ok) {
+            console.log("Error: " + response.status);
+            return;
+        }
+
+        titleBar.textContent = record.title;
+        artistBar.textContent = record.artists;
+
+        current_hist_id = media_response.headers.get("X-history-id");
+
+        const blob = await media_response.blob();
+        
+        playBlob(blob);
+    }
+
+    async function sample() {
+        const term = document.getElementById('advanced-term').value;
+        const player = document.getElementById('player');
+
+        try {
+            const response = await fetch("http://localhost:8000/musiql/sample/", {
+                method: "GET",  
+            })
+
+            if (!response.ok) {
+                console.log("Error: " + response.status);
+                return;
+            }
+            
+            const record = await response.json();
+            await serve_music(record);
+
+        } catch (err) {
+            console.error(err);
+        }
+        
+        let startSession = document.getElementById("start-session");
+        startSession.disabled = true;
+
+        player.onended = async () => {
+            sample();
+        }
+    }
+
+</script>
 </body>
 </html>
