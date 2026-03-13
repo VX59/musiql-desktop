@@ -14,6 +14,8 @@ app.whenReady().then(() => {
 
     mainWindow.loadURL(`http://localhost:8000/musiql/player/?ts=${Date.now()}`);    
     
+    mainWindow.webContents.executeJavaScript("window.library()");
+
     globalShortcut.register("Control+F9", () => {
         mainWindow.webContents.executeJavaScript("window.skip()");
     });
