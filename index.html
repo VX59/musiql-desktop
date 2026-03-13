@@ -79,11 +79,9 @@
             record = data.results[0]
 
             await serve_music(record);
-
             player.onended = async () => {
                 sample();
             }
-
         } else {
             data.results.forEach(record => {
                 const row = document.createElement("div");
@@ -100,7 +98,10 @@
                 `;
                 
                 row.onclick = async () => {
-                    serve_music(record);
+                    await serve_music(record);
+                    player.onended = async () => {
+                        sample();
+                    }
                 }
 
                 container.appendChild(row);
