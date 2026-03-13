@@ -17,7 +17,7 @@ app.whenReady().then(() => {
     mainWindow.webContents.executeJavaScript("window.library()");
 
     globalShortcut.register("Control+F9", () => {
-        mainWindow.webContents.executeJavaScript("window.skip()");
+        mainWindow.webContents.executeJavaScript("window.sample()");
     });
 });
 
