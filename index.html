@@ -149,7 +149,7 @@
     async function upload_resource() {
         const url = document.getElementById("uploader").value;
 
-        const response = await fetch(`${API_URL}/8000/musiql/`, {
+        const response = await fetch(`${API_URL}/musiql/`, {
             method: "POST",
             headers: {"Content-Type" : "application/json"},
             body: JSON.stringify({url: url})
