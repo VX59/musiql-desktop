@@ -10,7 +10,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "evdev": "^0.3.0"
+    "evdev": "^0.3.0",
+    "jsmediatags": "^3.9.7"
   },
   "devDependencies": {
     "electron": "^40.4.1"

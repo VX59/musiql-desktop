@@ -23,6 +23,7 @@
         <div class="text-center mb-3">
             <h4 id="title" class="fw-bold"></h4>
             <h6 id="artist" class="text-secondary"></h6>
+            <img id="thumb"/>
         </div>
 
         <!-- Audio Player -->
@@ -56,6 +57,9 @@
 </div>
 
 <script>
+
+    import jsmediatags from "jsmediatags";
+
     const API_URL = "{{API_URL}}";
 
     let current_hist_id = 0
@@ -164,6 +168,32 @@
         }
     }
 
+
+    async function dispThumb(blob, target_element) {
+        jsmediatags.read(blob, {
+            onSuccess: function(tag) {
+            const picture = tag.tags.picture;
+
+            if (picture) {
+                const { data, format } = picture;
+
+                let base64String = "";
+                for (let i = 0; i < data.length; i++) {
+                base64String += String.fromCharCode(data[i]);
+                }
+
+                const base64 = btoa(base64String);
+                const imageUrl = `data:${format};base64,${base64}`;
+
+                target_element.src = imageUrl;
+            }
+            },
+            onError: function(error) {
+                console.log("Tag error:", error);
+            }
+        });
+    }
+
     function playBlob(newBlob) {
         if (oldSrc) URL.revokeObjectURL(oldSrc);
         oldSrc = URL.createObjectURL(newBlob);
@@ -206,6 +236,7 @@
 
         const blob = await media_response.blob();
         
+        dispThumb(blob, document.getElementById("thumb"))
         playBlob(blob);
     }
 
