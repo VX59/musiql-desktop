@@ -67,6 +67,7 @@
     const artistBar = document.getElementById("artist")
     
     let oldSrc = null;
+    let last_uri = null;
 
     async function showSearchResults(data) {
         const modal = document.getElementById("searchModal");
@@ -82,6 +83,7 @@
 
             await serve_music(record);
             player.onended = async () => {
+                last_uri = record.uri;
                 sample();
             }
         } else {
@@ -102,6 +104,7 @@
                 row.onclick = async () => {
                     await serve_music(record);
                     player.onended = async () => {
+                        last_uri = record.uri
                         sample();
                     }
                 }
@@ -211,9 +214,9 @@
 
     async function sample() {
         const player = document.getElementById('player');
-
+        
         try {
-            const response = await fetch(`${API_URL}/musiql/sample/`, {
+            const response = await fetch(`${API_URL}/musiql/sample/${encodeURIComponent(last_uri)}`, {
                 method: "GET",  
             })
 
@@ -222,9 +225,10 @@
                 return;
             }
             
-            const record = await response.json();
+            record = await response.json();
+            last_uri = record.uri
             await serve_music(record);
-
+            
         } catch (err) {
             console.error(err);
         }
