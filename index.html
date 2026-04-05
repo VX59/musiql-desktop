@@ -180,7 +180,7 @@
             progress = player.currentTime/player.duration;
         }
 
-        const sample_response = await fetch(`${API_URL}/musiql/log/engagement/`, {
+        const engagemet_response = await fetch(`${API_URL}/musiql/log/engagement/`, {
             method : "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -188,8 +188,8 @@
             body : JSON.stringify({history_id : current_hist_id, duration_played: progress})
         })
 
-        if (!sample_response.ok) {
-            console.log("Error: ", sample_response.status);
+        if (!engagemet_response.ok) {
+            console.log("Error: ", engagemet_response.status);
             return;
         }
         
@@ -207,12 +207,13 @@
 
         current_hist_id = media_response.headers.get("X-history-id");
 
-        const blob = await media_response.blob();
-        
+        const { url } = await media_response.json();
+        const blob = await fetch(url).then(r => r.blob());
+
         playBlob(blob);
     }
 
-    async function sample() {
+   async function sample() {
         const player = document.getElementById('player');
         
         try {
