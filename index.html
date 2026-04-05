@@ -207,10 +207,16 @@
 
         current_hist_id = media_response.headers.get("X-history-id");
 
-        const { url } = await media_response.json();
-        const blob = await fetch(url).then(r => r.blob());
-
-        playBlob(blob);
+        if (media_response.headers.get("Content-Type") == "application/json") {
+            const { url } = await media_response.json();
+            const blob = await fetch(url).then(r => r.blob());
+            playBlob(blob);
+        } else if (media_response.headers.get("Content-Type") == "audio/mpeg") {
+            const blob = await mead_response.blob();
+            playBlob(blob);
+        } else {
+            console.log("unsupported response format")   
+        }
     }
 
    async function sample() {
