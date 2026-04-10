@@ -38,6 +38,7 @@
                 Add Resource
             </button>
         </div>
+        <div id="fix-container"></div>
     </div>
 </div>
 <di>
@@ -152,7 +153,7 @@
     async function upload_resource() {
         const url = document.getElementById("uploader").value;
 
-        const response = await fetch(`${API_URL}/musiql/`, {
+        const response = await fetch(`${API_URL}/musiql/try/receive`, {
             method: "POST",
             headers: {"Content-Type" : "application/json"},
             body: JSON.stringify({url: url})
@@ -161,11 +162,69 @@
         if (!response.ok) {
             console.log("Error: " + response.body);
             return;
-        } else {
-            document.getElementById("uploader").value = null;
-            console.log(`successully uploaded resource ${url}`);
         }
+
+
+        response_json = await response.json();
+        
+        console.log(response_json);
+        
+        if (response_json.needs_fix) {
+            const container = document.getElementById("fix-container")
+            container.innerHTML = "";
+
+            response_json.unknown_uploaders.forEach((entry, index) => {
+                const div = document.createElement("div");
+                div.id = `fix-card-${index}`;
+
+                div.innerHTML = `
+                    <h3>${entry.title}</h3>
+                    <p><strong>Uploader:</strong> ${entry.uploader}</p>
+
+                    <input 
+                        type="text" 
+                        id="fix-${index}" 
+                        placeholder="Correct artist name"
+                    />
+
+                    <button data-index="${index}" onclick="submitFix(this, '${encodeURIComponent(JSON.stringify(entry))}')">
+                        Fix
+                    </button>
+
+                    <hr/>
+                `;
+
+                container.appendChild(div);
+            });
+        }
+
+        document.getElementById("uploader").value = null;
     }
+
+
+    async function submitFix(button, encodedContext) {
+        const context = JSON.parse(decodeURIComponent(encodedContext));
+        const index = button.getAttribute("data-index");
+        const input = document.getElementById(`fix-${index}`);
+        context.uploader = input.value;
+
+        const response = await fetch(`${API_URL}/musiql/fix_uploader`, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                context: context,
+            })
+        });
+
+        if (!response.ok) {
+            console.log("Error: ", response.status);
+            return;
+        }
+
+        const fix_card = document.getElementById(`fix-card-${index}`);
+        fix_card.innerHTML = null;
+    }
+
 
     function playBlob(newBlob) {
         if (oldSrc) URL.revokeObjectURL(oldSrc);
