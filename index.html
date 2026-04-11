@@ -38,6 +38,7 @@
                 Add Resource
             </button>
         </div>
+        <div id="fix-container"></div>
     </div>
 </div>
 <di>
@@ -67,6 +68,7 @@
     const artistBar = document.getElementById("artist")
     
     let oldSrc = null;
+    let last_uri = null;
 
     async function showSearchResults(data) {
         const modal = document.getElementById("searchModal");
@@ -82,6 +84,7 @@
 
             await serve_music(record);
             player.onended = async () => {
+                last_uri = record.uri;
                 sample();
             }
         } else {
@@ -102,6 +105,7 @@
                 row.onclick = async () => {
                     await serve_music(record);
                     player.onended = async () => {
+                        last_uri = record.uri
                         sample();
                     }
                 }
@@ -149,7 +153,7 @@
     async function upload_resource() {
         const url = document.getElementById("uploader").value;
 
-        const response = await fetch(`${API_URL}/musiql/`, {
+        const response = await fetch(`${API_URL}/musiql/try/receive`, {
             method: "POST",
             headers: {"Content-Type" : "application/json"},
             body: JSON.stringify({url: url})
@@ -158,11 +162,69 @@
         if (!response.ok) {
             console.log("Error: " + response.body);
             return;
-        } else {
-            document.getElementById("uploader").value = null;
-            console.log(`successully uploaded resource ${url}`);
         }
+
+
+        response_json = await response.json();
+        
+        console.log(response_json);
+        
+        if (response_json.needs_fix) {
+            const container = document.getElementById("fix-container")
+            container.innerHTML = "";
+
+            response_json.unknown_uploaders.forEach((entry, index) => {
+                const div = document.createElement("div");
+                div.id = `fix-card-${index}`;
+
+                div.innerHTML = `
+                    <h3>${entry.title}</h3>
+                    <p><strong>Uploader:</strong> ${entry.uploader}</p>
+
+                    <input 
+                        type="text" 
+                        id="fix-${index}" 
+                        placeholder="Correct artist name"
+                    />
+
+                    <button data-index="${index}" onclick="submitFix(this, '${encodeURIComponent(JSON.stringify(entry))}')">
+                        Fix
+                    </button>
+
+                    <hr/>
+                `;
+
+                container.appendChild(div);
+            });
+        }
+
+        document.getElementById("uploader").value = null;
     }
+
+
+    async function submitFix(button, encodedContext) {
+        const context = JSON.parse(decodeURIComponent(encodedContext));
+        const index = button.getAttribute("data-index");
+        const input = document.getElementById(`fix-${index}`);
+        context.uploader = input.value;
+
+        const response = await fetch(`${API_URL}/musiql/fix_uploader`, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                context: context,
+            })
+        });
+
+        if (!response.ok) {
+            console.log("Error: ", response.status);
+            return;
+        }
+
+        const fix_card = document.getElementById(`fix-card-${index}`);
+        fix_card.innerHTML = null;
+    }
+
 
     function playBlob(newBlob) {
         if (oldSrc) URL.revokeObjectURL(oldSrc);
@@ -177,7 +239,7 @@
             progress = player.currentTime/player.duration;
         }
 
-        const sample_response = await fetch(`${API_URL}/musiql/log/engagement/`, {
+        const engagemet_response = await fetch(`${API_URL}/musiql/log/engagement/`, {
             method : "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -185,8 +247,8 @@
             body : JSON.stringify({history_id : current_hist_id, duration_played: progress})
         })
 
-        if (!sample_response.ok) {
-            console.log("Error: ", sample_response.status);
+        if (!engagemet_response.ok) {
+            console.log("Error: ", engagemet_response.status);
             return;
         }
         
@@ -204,16 +266,23 @@
 
         current_hist_id = media_response.headers.get("X-history-id");
 
-        const blob = await media_response.blob();
-        
-        playBlob(blob);
+        if (media_response.headers.get("Content-Type") == "application/json") {
+            const { url } = await media_response.json();
+            const blob = await fetch(url).then(r => r.blob());
+            playBlob(blob);
+        } else if (media_response.headers.get("Content-Type") == "audio/mpeg") {
+            const blob = await mead_response.blob();
+            playBlob(blob);
+        } else {
+            console.log("unsupported response format")   
+        }
     }
 
-    async function sample() {
+   async function sample() {
         const player = document.getElementById('player');
-
+        
         try {
-            const response = await fetch(`${API_URL}/musiql/sample/`, {
+            const response = await fetch(`${API_URL}/musiql/sample/${encodeURIComponent(last_uri)}`, {
                 method: "GET",  
             })
 
@@ -222,9 +291,10 @@
                 return;
             }
             
-            const record = await response.json();
+            record = await response.json();
+            last_uri = record.uri
             await serve_music(record);
-
+            
         } catch (err) {
             console.error(err);
         }
