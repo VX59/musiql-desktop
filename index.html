@@ -176,6 +176,7 @@
 
             response_json.unknown_uploaders.forEach((entry, index) => {
                 const div = document.createElement("div");
+
                 div.id = `fix-card-${index}`;
 
                 div.innerHTML = `
@@ -183,7 +184,7 @@
                     <input 
                         type="text" 
                         id="fix-${index}"
-                        value=${entry.uploader}
+                        value="${entry.correction}"
                         placeholder="Correct artist name"
                     />
 
@@ -204,7 +205,7 @@
         const context = JSON.parse(decodeURIComponent(encodedContext));
         const index = button.getAttribute("data-index");
         const input = document.getElementById(`fix-${index}`);
-        context.uploader = input.value;
+        context.correction = input.value;
 
         const response = await fetch(`${MEDIA_INGESTION_API_URL}/media_ingestion/fix_uploader`, {
             method: "POST",
