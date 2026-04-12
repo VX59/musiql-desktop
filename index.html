@@ -180,19 +180,16 @@
 
                 div.innerHTML = `
                     <h3>${entry.title}</h3>
-                    <p><strong>Uploader:</strong> ${entry.uploader}</p>
-
                     <input 
                         type="text" 
-                        id="fix-${index}" 
+                        id="fix-${index}"
+                        value=${entry.uploader}
                         placeholder="Correct artist name"
                     />
 
                     <button data-index="${index}" onclick="submitFix(this, '${encodeURIComponent(JSON.stringify(entry))}')">
-                        Fix
+                        Commit
                     </button>
-
-                    <hr/>
                 `;
 
                 container.appendChild(div);
