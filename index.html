@@ -57,7 +57,8 @@
 </div>
 
 <script>
-    const API_URL = "{{API_URL}}";
+    const MUSIQL_API_URL = "{{MUSIQL_API_URL}}";
+    const MEDIA_INGESTION_API_URL = "{{MEDIA_INGESTION_API_URL}}";
 
     let current_hist_id = 0
 
@@ -133,7 +134,7 @@
             progress = player.currentTime/player.duration
         }
 
-        const response = await fetch(`${API_URL}/musiql/search/advanced`, {
+        const response = await fetch(`${MUSIQL_API_URL}/musiql/search/advanced`, {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({search_term: term, history_id: current_hist_id, duration_played: progress})
@@ -153,7 +154,7 @@
     async function upload_resource() {
         const url = document.getElementById("uploader").value;
 
-        const response = await fetch(`${API_URL}/musiql/try/receive`, {
+        const response = await fetch(`${MEDIA_INGESTION_API_URL}/media_ingestion/try/receive`, {
             method: "POST",
             headers: {"Content-Type" : "application/json"},
             body: JSON.stringify({url: url})
@@ -208,7 +209,7 @@
         const input = document.getElementById(`fix-${index}`);
         context.uploader = input.value;
 
-        const response = await fetch(`${API_URL}/musiql/fix_uploader`, {
+        const response = await fetch(`${MEDIA_INGESTION_API_URL}/media_ingestion/fix_uploader`, {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({
@@ -239,7 +240,7 @@
             progress = player.currentTime/player.duration;
         }
 
-        const engagemet_response = await fetch(`${API_URL}/musiql/log/engagement/`, {
+        const engagemet_response = await fetch(`${MUSIQL_API_URL}/musiql/log/engagement/`, {
             method : "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -252,7 +253,7 @@
             return;
         }
         
-        const media_response = await fetch(`${API_URL}/musiql/serve/${encodeURIComponent(record.uri)}`, {
+        const media_response = await fetch(`${MUSIQL_API_URL}/musiql/serve/${encodeURIComponent(record.uri)}`, {
             method: "GET",
         });
         
@@ -282,7 +283,7 @@
         const player = document.getElementById('player');
         
         try {
-            const response = await fetch(`${API_URL}/musiql/sample/${encodeURIComponent(last_uri)}`, {
+            const response = await fetch(`${MUSIQL_API_URL}/musiql/sample/${encodeURIComponent(last_uri)}`, {
                 method: "GET",  
             })
 
