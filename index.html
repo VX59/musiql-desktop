@@ -269,9 +269,6 @@
             const { url } = await media_response.json();
             const blob = await fetch(url).then(r => r.blob());
             playBlob(blob);
-        } else if (media_response.headers.get("Content-Type") == "audio/mpeg") {
-            const blob = await mead_response.blob();
-            playBlob(blob);
         } else {
             console.log("unsupported response format")   
         }
