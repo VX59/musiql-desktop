@@ -43,7 +43,11 @@
 </div>
 <di>
     <button class="library" onclick="library()">library</button>
+    <button class="queue" onclick="toggleQueue()">queue</button>
 </di>
+<div class="modal fade" id="queueModal" tabindex="-1">
+    <div id="queueContainer" class="modal-body"></div>
+</div>
 <!-- Search Modal -->
 <div class="modal fade" id="searchModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -80,7 +84,7 @@
         count.textContent = `${data.num_results} Results`;
         
         if (data.num_results == 1) {
-            
+
             record = data.results[0]
 
             await serve_music(record);
@@ -106,23 +110,26 @@
                 row.onclick = async () => {
                     await serve_music(record);
                     player.onended = async () => {
-                        last_uri = record.uri
+                        last_uri = record.uri;
                         sample();
                     }
                 }
 
                 container.appendChild(row);
             });
-            
-            const modalInstance = new bootstrap.Modal(document.getElementById('searchModal'));
-            modalInstance.show();
         }
     }
 
     async function library() {
         const search = document.getElementById('advanced-term');
         search.value = null;
+        
         await advanced_search();
+
+        const container = document.getElementById("resultsContainer");
+        const header = document.createElement("h4");
+        header.textContent = "Library";
+        container.prepend(header);
     }
 
     async function advanced_search() {
@@ -234,6 +241,99 @@
         player.play();
     }
 
+    const queueListeners = new Set();
+    let isQueueModalOpen = false;
+    
+    function onQueueChange(fn) {
+        queueListeners.add(fn);
+        return () => queueListeners.delete(fn);
+    }
+
+    function emitQueueChange() {
+        queueListeners.forEach(fn => fn(queue));
+    }
+
+    function enqueue(item) {
+        queue.push(item);
+        emitQueueChange();
+    }
+
+    function dequeue() {
+        const item = queue.shift();
+        emitQueueChange();
+        return item;
+    }
+
+    let queue_backlog = [];
+    let queue = [];
+    
+    const queue_size = 10
+
+    function renderQueue(queueData) {
+        if (!isQueueModalOpen) return;
+
+        const container = document.getElementById("queueContainer");
+        container.innerHTML = "";
+        const header = document.createElement("h4");
+        header.textContent = "Queue";
+        container.appendChild(header);
+            
+        queueData.forEach(record => {
+            const row = document.createElement("div");
+            row.className = "result-row";
+            row.style.cursor = "pointer";
+
+            row.innerHTML = `
+                <div class="queue-result">
+                    <span class="result-title">${record.title}</span>
+                    <span> • </span>
+                    <span class="result-artist">${record.artists}</span>
+                </div>
+            `;
+
+            row.onclick = async () => {
+                await serve_music(record);
+
+                player.onended = async () => {
+                    last_uri = record.uri;
+                    sample();
+                };
+            };
+
+            container.appendChild(row);
+        });
+    }
+
+    onQueueChange(() => {
+        if (isQueueModalOpen) {
+            renderQueue(queue);
+        }
+    });
+
+    function toggleQueue() {
+        const modal = document.getElementById('queueModal');
+
+        isQueueModalOpen = !isQueueModalOpen;
+
+        if (isQueueModalOpen) {
+            renderQueue(queue);
+            modal.style.display = "block";
+        } else {
+            modal.style.display = "none";
+        }
+    }
+
+    async function try_repopulate_queue(uri) {
+        if (queue_backlog.length === 0) {
+            const response = await fetch(`${MUSIQL_API_URL}/musiql/sample/${encodeURIComponent(uri)}`);
+            queue_backlog = await response.json();
+        }
+
+        while (queue.length < queue_size && queue_backlog.length > 0) {
+            enqueue(queue_backlog.shift());
+        }
+    }
+
     async function serve_music(record) {
         let progress = 1.0;
         if (current_hist_id > 0) {
@@ -252,7 +352,7 @@
             console.log("Error: ", engagemet_response.status);
             return;
         }
-        
+
         const media_response = await fetch(`${MUSIQL_API_URL}/musiql/serve/${encodeURIComponent(record.uri)}`, {
             method: "GET",
         });
@@ -279,26 +379,14 @@
         }
     }
 
-   async function sample() {
-        const player = document.getElementById('player');
-        
-        try {
-            const response = await fetch(`${MUSIQL_API_URL}/musiql/sample/${encodeURIComponent(last_uri)}`, {
-                method: "GET",  
-            })
 
-            if (!response.ok) {
-                console.log("Error: " + response.status);
-                return;
-            }
-            
-            record = await response.json();
-            last_uri = record.uri
-            await serve_music(record);
-            
-        } catch (err) {
-            console.error(err);
-        }
+    async function sample() {
+        const player = document.getElementById('player');
+
+        await try_repopulate_queue(last_uri);
+        const record = dequeue();
+        last_uri = record.uri;
+        await serve_music(record);
 
         player.onended = async () => {
             sample();
