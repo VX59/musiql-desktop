@@ -261,7 +261,6 @@
 
         .upload-bar {
             display: flex;
-            gap: 2px;
             width: 100%;
             margin-bottom: 12px;
         }
@@ -284,7 +283,7 @@
             padding: 10px;
             font-size: 14px;
 
-        border: none;
+            border: none;
             border-radius: 2px;
 
             background: #16a34a;
@@ -342,8 +341,23 @@
 </head>
 
 <body class="d-flex align-items-center justify-content-center vh-100">
+<div id="loggedOutUi" class="container" style="max-width: 700px; display:block">
+    <div id="loginModal" class="modal hidden">
+        <div class="modal-content">
 
-<div class="container" style="max-width: 700px;">
+            <h2>Login</h2>
+
+            <input id="username" placeholder="Username" />
+            <input id="password" type="password" placeholder="Password" />
+
+            <div class="actions">
+                <button onclick="submitLogin()">Login</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+<div id="loggedInUi" class="container" style="max-width: 700px; display:none">
     <div class="card shadow-lg p-4">
 
         <h1 class="text-center mb-4"> Musiql Player</h1>
@@ -374,52 +388,121 @@
 
         </div>
     </div>
-</div>
-<div class="nav-buttons">
-    <button class="library" onclick="library()">library</button>
-    <button class="queue" onclick="toggleQueue()">queue</button>
-    <button class="add-music" onclick="toggleAddMusic()">add music</button>
-</div>
-<!-- Upload Section -->
-<div class="add-music-container" id="addMusicModal">
-    <div class="upload-bar">
-        <input type="text" id="uploader" placeholder="Paste YouTube link here">
-        <button onclick="upload_resource()">Add Resource</button>
-    </div>
 
-    <div id="fix-container"></div>
-</div>
-<div class="modal fade" id="queueModal" tabindex="-1">
-    <div id="result-scroll">
-        <table class="results-table">
-            <tbody id="queueContainer"></tbody>
-        </table>
+    <div class="nav-buttons">
+        <button class="library" onclick="library()">library</button>
+        <button class="queue" onclick="toggleQueue()">queue</button>
+        <button class="add-music" onclick="toggleAddMusic()">add music</button>
     </div>
-</div>
-<!-- Search Modal -->
-<div class="modal fade" id="searchModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content p-3">
-            <div class="modal-header border-0">
-                <h5 id="resultCount" class="modal-title"></h5>
-            </div>
-            <div class="results-scroll">
-                <table class="results-table">
-                    <thead>
-                        <tr>
-                            <th>Artist</th>
-                            <th>Title</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody id="resultsContainer"></tbody>
-                </table>
+    <!-- Upload Section -->
+    <div class="add-music-container" id="addMusicModal">
+        <div class="upload-bar">
+            <input type="text" id="uploader" placeholder="Paste YouTube link here">
+            <button onclick="upload_resource()">Add Resource</button>
+        </div>
+
+        <div id="fix-container"></div>
+    </div>
+    <div class="modal fade" id="queueModal" tabindex="-1">
+        <div id="result-scroll">
+            <table class="results-table">
+                <tbody id="queueContainer"></tbody>
+            </table>
+        </div>
+    </div>
+    <!-- Search Modal -->
+    <div class="modal fade" id="searchModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content p-3">
+                <div class="modal-header border-0">
+                    <h5 id="resultCount" class="modal-title"></h5>
+                </div>
+                <div class="results-scroll">
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th>Artist</th>
+                                <th>Title</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsContainer"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
+
 <script>
+
+    function getToken() {
+        return localStorage.getItem("token");
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+        token = localStorage.getItem("token");
+
+        if (token) {
+            showLoggedInUi();
+        } else {
+            showLoggedOutUi();
+        }
+    });
+
+    function showLoggedInUi() {
+        document.getElementById("loggedInUi").style.display = "block";
+        document.getElementById("loggedOutUi").style.display = "none";
+    }
+
+    function showLoggedOutUi() {
+        document.getElementById("loggedInUi").style.display = "none";
+        document.getElementById("loggedOutUi").style.display = "block";
+    }
+
+
+    async function submitLogin() {
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+
+        if (!username || !password) {
+            alert("Please fill in both fields");
+            return;
+        }
+
+        try {
+            const res = await fetch("/musiql/login/user", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    username,
+                    password
+                })
+            });
+
+            if (!res.ok) {
+                alert("Login failed");
+                return;
+            }
+
+            const data = await res.json();
+
+            // store token
+            localStorage.setItem("token", data.token);
+
+            // switch UI
+            showLoggedInUi();
+
+        } catch (err) {
+            console.error(err);
+            alert("Something went wrong");
+        }
+    }
+
+
     const MUSIQL_API_URL = "{{MUSIQL_API_URL}}";
     const MEDIA_INGESTION_API_URL = "{{MEDIA_INGESTION_API_URL}}";
 
@@ -493,7 +576,7 @@
 
         const response = await fetch(`${MUSIQL_API_URL}/musiql/search/advanced`, {
             method: "POST",
-            headers: {"Content-Type": "application/json"},
+            headers: {"Content-Type": "application/json", "Authorization": getToken()},
             body: JSON.stringify({search_term: term, history_id: current_hist_id, duration_played: progress})
         });
         
@@ -517,7 +600,7 @@
 
         const response = await fetch(`${MEDIA_INGESTION_API_URL}/media_ingestion/try/receive`, {
             method: "POST",
-            headers: {"Content-Type" : "application/json"},
+            headers: {"Content-Type" : "application/json", "Authorization": getToken()},
             body: JSON.stringify({url: url})
         });
 
@@ -574,7 +657,7 @@
 
         const response = await fetch(`${MEDIA_INGESTION_API_URL}/media_ingestion/fix_uploader`, {
             method: "POST",
-            headers: {"Content-Type": "application/json"},
+            headers: {"Content-Type": "application/json", "Authorization": getToken()},
             body: JSON.stringify({
                 context: context,
             })
@@ -703,7 +786,10 @@
 
     async function try_repopulate_queue(uri) {
         if (queue_backlog.length === 0) {
-            const response = await fetch(`${MUSIQL_API_URL}/musiql/sample/${encodeURIComponent(uri)}`);
+            const response = await fetch(`${MUSIQL_API_URL}/musiql/sample/${encodeURIComponent(uri)}`, {
+                method: "GET",
+                headers: {"Authorization": getToken()}
+            });
             queue_backlog = await response.json();
         }
 
@@ -721,7 +807,8 @@
         const engagemet_response = await fetch(`${MUSIQL_API_URL}/musiql/log/engagement/`, {
             method : "POST",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Authorization": getToken()
             },
             body : JSON.stringify({history_id : current_hist_id, duration_played: progress})
         })
@@ -733,6 +820,9 @@
 
         const media_response = await fetch(`${MUSIQL_API_URL}/musiql/serve/${encodeURIComponent(record.uri)}`, {
             method: "GET",
+            headers: {
+                "Authorization": getToken()
+            }
         });
         
         if (!media_response.ok) {
