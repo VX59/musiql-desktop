@@ -66,7 +66,7 @@
             display: flex;
             gap: 2px;
             width: 100%;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
         }
         .search-bar input {
             flex: 1;
@@ -100,57 +100,148 @@
             bottom: 0;
             left: 0;
             width: 100%;
-            
-            display: flex;
-            align-items: center;
-            gap: 12px;
 
-            padding: 10px 14px;
-            background: #ffffff;
+            display: grid;
+            grid-template-columns: minmax(180px, 250px) minmax(200px, 1fr) auto; /* Flexible left column */
+
+            align-items: center;
+            gap: 16px; /* Slightly more gap for breathing room */
+
+            padding: 10px 20px; /* More horizontal padding */
+            background: #fff;
             border-top: 1px solid #ddd;
             z-index: 1000;
+            box-sizing: border-box;
         }
-        #audio-container audio,
-        #audio-container #player {
-            flex: 1;
-            width: 100%;
-        }
+
         #audio-container button {
             padding: 8px 14px;
             border: none;
-            border-radius: 8px;
+            border-radius: 2px;
             cursor: pointer;
             background: #111;
             color: white;
         }
 
-        .now-playing {
-            text-align: center;
-            margin-bottom: 16px;
-        }
-        #title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #111;
-            margin-bottom: 4px;
-        }
-        #artist {
-            font-size: 14px;
-            color: #666;
-        }
-        #title,
-        #artist {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        .now-playing {
-            padding: 10px 0;
-            border-bottom: 1px solid #eee;
+        .left {
+            display: flex;
+            align-items: center;
+            overflow: visible; /* Changed from hidden */
+            min-width: 0;
         }
 
+        .now-playing {
+            display: flex;
+            flex-direction: column;
+            overflow: visible; /* Changed from hidden */
+            min-width: 0;
+            width: 100%;
+        }
+
+        #title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #111;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%; /* Ensure it respects container */
+        }
+
+        #artist {
+            font-size: 12px;
+            color: #666;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+
+        .center {
+            display: flex;
+            justify-content: center;
+            min-width: 0;
+            width: 100%;
+        }
+
+        .center audio {
+            width: 90%;
+            min-width: 0; /* Remove minimum width restriction */
+            max-width: 90%; /* Allow full width */
+            display: block;
+        }
+
+        .right {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        /* Style for the Next button */
+        .right button {
+            margin: 0;
+            padding: 8px 14px;
+            border: none;
+            border-radius: 2px; /* Consistent with other buttons */
+            cursor: pointer;
+            background: #111;
+            color: white;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        /* Alternative layout if you want the player to take full center space */
+        /* Uncomment this if you want the player to expand fully */
+        /*
+        .center audio {
+            min-width: 300px;
+            max-width: 100%;
+        }
+        */
+
+        /* Responsive design for smaller screens */
+        @media (max-width: 700px) {
+            .audio-container {
+                grid-template-columns: minmax(150px, 200px) minmax(180px, 1fr) auto;
+                gap: 10px;
+                padding: 10px 12px;
+            }
+            
+            #title, #artist {
+                font-size: 12px; /* Slightly smaller on mobile */
+            }
+            
+            .right button {
+                padding: 6px 10px;
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 550px) {
+            .audio-container {
+                grid-template-columns: 1fr auto; /* Stack on very small screens */
+                grid-template-rows: auto auto;
+                gap: 8px;
+            }
+            
+            .left {
+                grid-column: 1 / -1;
+                order: 2;
+            }
+            
+            .center {
+                grid-column: 1;
+                order: 1;
+            }
+            
+            .right {
+                grid-column: 2;
+                order: 1;
+            }
+        }
         .nav-buttons button {
-            margin-top: 12px;
             margin-bottom: 12px;
             padding: 8px 14px;
             border: none;
@@ -164,11 +255,15 @@
             background: #333;
         }
 
+        .add-music-container {
+            display: none;
+        }
+
         .upload-bar {
             display: flex;
             gap: 2px;
             width: 100%;
-            margin-top: 12px;
+            margin-bottom: 12px;
         }
         .upload-bar input {
             flex: 1;
@@ -189,7 +284,7 @@
             padding: 10px;
             font-size: 14px;
 
-            border: none;
+        border: none;
             border-radius: 2px;
 
             background: #16a34a;
@@ -242,6 +337,7 @@
         .fix-card-content button:hover {
             background: #333;
         }
+
     </style>
 </head>
 
@@ -257,29 +353,41 @@
             <input type="text" id="advanced-term" placeholder="Search titles and artists">
             <button onclick="advanced_search()">Search</button>
         </div>
-
-        <div class="now-playing">
-            <div id="title"></div>
-            <div id="artist"></div>
-        </div>
  
         <div class="audio-container">
-            <audio id="player" controls></audio>
-            <button id="sample">sample</button>
-        </div>
 
-        <!-- Upload Section -->
-        <div class="upload-bar">
-            <input type="text" id="uploader" placeholder="Paste YouTube link here">
-            <button onclick="upload_resource()">Add Resource</button>
-        </div>
+            <!-- LEFT: now playing -->
+            <div class="left">
+                <div class="now-playing">
+                    <div id="title"></div>
+                    <div id="artist"></div>
+                </div>
+            </div>
 
-        <div id="fix-container"></div>
+            <!-- CENTER: player -->
+            <div class="center">
+                <audio id="player" controls></audio>
+            </div>
+            <div class="right">
+                <button id="sample">Next</button>
+            </div>
+
+        </div>
     </div>
 </div>
 <div class="nav-buttons">
     <button class="library" onclick="library()">library</button>
     <button class="queue" onclick="toggleQueue()">queue</button>
+    <button class="add-music" onclick="toggleAddMusic()">add music</button>
+</div>
+<!-- Upload Section -->
+<div class="add-music-container" id="addMusicModal">
+    <div class="upload-bar">
+        <input type="text" id="uploader" placeholder="Paste YouTube link here">
+        <button onclick="upload_resource()">Add Resource</button>
+    </div>
+
+    <div id="fix-container"></div>
 </div>
 <div class="modal fade" id="queueModal" tabindex="-1">
     <div id="result-scroll">
@@ -335,6 +443,7 @@
         count.textContent = `${data.num_results} Results`;
         
         if (data.num_results == 1) {
+            library();
             record = data.results[0]
             await serve_music(record);
         } else {
@@ -347,21 +456,14 @@
                 <td class="result-artist">${record.artists}</td>
                 <td class="result-title">${record.title}</td>
                 <td class="button-col">
-                    <button class="stack-btn">stack</button>
                     <button class="queue-btn">queue</button>
                 </td>
                 `;
-                
-                const stack_btn = row.querySelector('.stack-btn');
-                stack_btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    stack(record)
-                });                
 
                 const queue_btn = row.querySelector('.queue-btn');
                 queue_btn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    enqueue(record)
+                    stack(record)
                 });
 
                 row.onclick = async () => {
@@ -405,6 +507,10 @@
         const jsonBody = await response.json();
         showSearchResults(jsonBody);
     }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        library();
+    });
 
     async function upload_resource() {
         const url = document.getElementById("uploader").value;
@@ -513,6 +619,11 @@
         emitQueueChange();
     }
 
+    function queue_remove(item) {
+        queue = queue.filter(x => x.uri !== item.uri);
+        emitQueueChange();
+    }
+
     function dequeue() {
         const item = queue.shift();
         emitQueueChange();
@@ -539,8 +650,15 @@
             <td class="result-artist">${record.artists}</td>
             <td class="result-title">${record.title}</td>
             <td class="button-col">
+                <button class="queue-remove-btn">remove</button>
             </td>
             `;
+
+            const queue_btn = row.querySelector('.queue-remove-btn');
+            queue_btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                queue_remove(record);
+            });
 
             row.onclick = async () => {
                 await serve_music(record);
@@ -563,6 +681,20 @@
 
         if (isQueueModalOpen) {
             renderQueue(queue);
+            modal.style.display = "block";
+        } else {
+            modal.style.display = "none";
+        }
+    }
+
+    let isAddMusicModalOpen = false;
+
+    function toggleAddMusic() {
+        const modal = document.getElementById("addMusicModal");
+
+        isAddMusicModalOpen = !isAddMusicModalOpen;
+
+        if (isAddMusicModalOpen) {
             modal.style.display = "block";
         } else {
             modal.style.display = "none";
