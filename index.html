@@ -341,7 +341,7 @@
 </head>
 
 <body class="d-flex align-items-center justify-content-center vh-100">
-<div id="loggedOutUi" class="container" style="max-width: 700px; display:block">
+<div id="loggedOutUi" class="container" style="max-width: 100%; display:block">
     <div id="loginModal" class="modal hidden">
         <div class="modal-content">
 
@@ -357,7 +357,7 @@
         </div>
     </div>
 </div>
-<div id="loggedInUi" class="container" style="max-width: 700px; display:none">
+<div id="loggedInUi" class="container" style="max-width: 100%; display:none">
     <div class="card shadow-lg p-4">
 
         <h1 class="text-center mb-4"> Musiql Player</h1>
@@ -393,6 +393,8 @@
         <button class="library" onclick="library()">library</button>
         <button class="queue" onclick="toggleQueue()">queue</button>
         <button class="add-music" onclick="toggleAddMusic()">add music</button>
+        <button class="models" onclick="toggleModels()">recommendation models</button>
+
     </div>
     <!-- Upload Section -->
     <div class="add-music-container" id="addMusicModal">
