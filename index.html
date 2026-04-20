@@ -261,6 +261,7 @@
 
         .upload-bar {
             display: flex;
+            gap: 2px;
             width: 100%;
             margin-bottom: 12px;
         }
@@ -268,7 +269,6 @@
             flex: 1;
             padding: 10px;
             font-size: 15px;
-
             border: 1px solid #ddd;
             border-radius: 2px;
 
@@ -282,18 +282,17 @@
         .upload-bar button {
             padding: 10px;
             font-size: 14px;
-
             border: none;
             border-radius: 2px;
 
-            background: #16a34a;
+            background: #111;
             color: white;
 
             cursor: pointer;
             transition: background 0.2s ease;
         }
         .upload-bar button:hover {
-            background: #12833b;
+            background: #333;
         }
 
         .fix-card-content {
@@ -316,7 +315,6 @@
         .fix-card-content input {
             padding: 10px;
             font-size: 14px;
-
             border: 1px solid #ddd;
             border-radius: 2px;
 
@@ -324,8 +322,7 @@
         }
         .fix-card-content button {
             padding: 10px;
-
-            border: none;
+            border-color:#111;
             border-radius: 2px;
 
             background: #111;
@@ -334,7 +331,24 @@
             cursor: pointer;
         }
         .fix-card-content button:hover {
+            border-color: #333;
             background: #333;
+        }
+
+        .fix-row {
+            display: flex;
+            gap: 2px;
+            align-items: center;
+        }
+
+        .fix-row input {
+            flex: 1;          /* takes most space */
+            width: auto;      /* override your 90% */
+        }
+
+        .fix-row button {
+            flex-shrink: 0;   /* prevents shrinking */
+            width: auto;      /* override your 10% */
         }
 
     </style>
@@ -399,8 +413,9 @@
     <!-- Upload Section -->
     <div class="add-music-container" id="addMusicModal">
         <div class="upload-bar">
+            <button onclick="get_fixes()">Refresh Pending Corrections</button>
             <input type="text" id="uploader" placeholder="Paste YouTube link here">
-            <button onclick="upload_resource()">Add Resource</button>
+            <button onclick="upload_resource()">Request</button>
         </div>
 
         <div id="fix-container"></div>
@@ -425,6 +440,7 @@
                             <tr>
                                 <th>Artist</th>
                                 <th>Title</th>
+                                <th>Added By</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -528,47 +544,115 @@
         count.textContent = `${data.num_results} Results`;
         
         if (data.num_results == 1) {
-            library();
-            record = data.results[0]
-            await serve_music(record);
-        } else {
-            data.results.forEach(record => {
-                const row = document.createElement("tr");
-                row.className = "tablulated-result";
-                row.style.cursor = "pointer";
+            await serve_music(data.results[0]);
+        }
 
-                row.innerHTML = `
+        data.results.forEach(record => {
+            const row = document.createElement("tr");
+            row.className = "tablulated-result";
+            row.style.cursor = "pointer";
+
+            row.innerHTML = `
                 <td class="result-artist">${record.artists}</td>
                 <td class="result-title">${record.title}</td>
+                <td class="result-added-by">${record.added_by}</td>
                 <td class="button-col">
                     <button class="queue-btn">queue</button>
+                    <button class="library-btn">
+                        ${record.in_library ? "-" : "+"}
+                    </button>
                 </td>
-                `;
+            `;
 
-                const queue_btn = row.querySelector('.queue-btn');
-                queue_btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    stack(record)
-                });
-
-                row.onclick = async () => {
-                    last_uri = record.uri;
-                    await serve_music(record);
-                }
-
-                container.appendChild(row);
+            const queue_btn = row.querySelector('.queue-btn');
+            queue_btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                stack(record);
             });
+
+            const libraryBtn = row.querySelector(".library-btn");
+            libraryBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                if (record.in_library) {
+                    await removeFromLibrary(record.uri);
+                    record.in_library = false;
+                    libraryBtn.innerHTML = "+";
+                } else {
+                    await addToLibrary(record.uri);
+                    record.in_library = true;
+                    libraryBtn.innerHTML = "-";
+                }
+            });
+
+            row.onclick = async () => {
+                last_uri = record.uri;
+                await serve_music(record);
+            }
+
+            container.appendChild(row);
+        });
+    }
+
+    async function removeFromLibrary(uri) {
+        const response = await fetch(`${MUSIQL_API_URL}/musiql/library/remove/${encodeURIComponent(uri)}`, {
+            method: "GET",
+            headers: {"Content-Type": "application/json", "Authorization": `Bearer ${localStorage.getItem("token")}`},
+        });
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                localStorage.removeItem("token");
+                showLoggedOutUi();
+            }
+            console.log("Error: " + response.status);
+            return;
+        }
+    }
+
+    async function addToLibrary(uri) {
+        const response = await fetch(`${MUSIQL_API_URL}/musiql/library/add/${encodeURIComponent(uri)}`, {
+            method: "GET",
+            headers: {"Content-Type": "application/json", "Authorization": `Bearer ${localStorage.getItem("token")}`},
+        });
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                localStorage.removeItem("token");
+                showLoggedOutUi();
+            }
+            console.log("Error: " + response.status);
+            return;
         }
     }
 
     async function library() {
-        const search = document.getElementById('advanced-term');
-        search.value = null;
-        await advanced_search();
+        const response = await fetch(`${MUSIQL_API_URL}/musiql/search/advanced`, {
+            method: "POST",
+            headers: {"Content-Type": "application/json", "Authorization": `Bearer ${localStorage.getItem("token")}`},
+            body: JSON.stringify({search_term: "@library", history_id: 0, duration_played: 0})
+        });
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                localStorage.removeItem("token");
+                showLoggedOutUi();
+            }
+            console.log("Error: " + response.status);
+            return;
+        }
+
+        const jsonBody = await response.json();
+        showSearchResults(jsonBody);
     }
 
     async function advanced_search() {
         const term = document.getElementById('advanced-term').value;
+
+        if (term === "") {
+            console.log("search term cannot be empty");
+            return;
+        }
+
         const player = document.getElementById('player');
 
         let progress = 1.0;
@@ -578,11 +662,15 @@
 
         const response = await fetch(`${MUSIQL_API_URL}/musiql/search/advanced`, {
             method: "POST",
-            headers: {"Content-Type": "application/json", "Authorization": getToken()},
+            headers: {"Content-Type": "application/json", "Authorization": `Bearer ${localStorage.getItem("token")}`},
             body: JSON.stringify({search_term: term, history_id: current_hist_id, duration_played: progress})
         });
         
         if (!response.ok) {
+            if (response.status === 401) {
+                localStorage.removeItem("token");
+                showLoggedOutUi();
+            }
             console.log("Error: " + response.status);
             return;
         }
@@ -602,33 +690,51 @@
 
         const response = await fetch(`${MEDIA_INGESTION_API_URL}/media_ingestion/try/receive`, {
             method: "POST",
-            headers: {"Content-Type" : "application/json", "Authorization": getToken()},
+            headers: {"Content-Type" : "application/json", "Authorization": `Bearer ${localStorage.getItem("token")}`},
             body: JSON.stringify({url: url})
         });
 
         if (!response.ok) {
             console.log("Error: " + response.body);
+            if (response.status === 401) {
+                localStorage.removeItem("token");
+                showLoggedOutUi();
+            }
             return;
         }
+        document.getElementById("uploader").value = null;
+    }
 
+    async function get_fixes() {
+        const container = document.getElementById("fix-container")
+        container.innerHTML = "";
 
-        response_json = await response.json();
+        const response = await fetch(`${MEDIA_INGESTION_API_URL}/media_ingestion/get_fixes`, {
+            method: "GET",
+            headers: {"Content-Type" : "application/json", "Authorization": `Bearer ${localStorage.getItem("token")}`},
+        });
+
+        if (!response.ok) {
+            console.log("Error: " + response.body);
+            if (response.status === 401) {
+                localStorage.removeItem("token");
+                showLoggedOutUi();
+            }
+            return;
+        }
         
-        console.log(response_json);
-        
-        if (response_json.needs_fix) {
-            const container = document.getElementById("fix-container")
-            container.innerHTML = "";
+        const response_json = await response.json();
 
-            response_json.unknown_uploaders.forEach((entry, index) => {
-                const div = document.createElement("div");
+        response_json.forEach((entry, index) => {
+            const div = document.createElement("div");
 
-                div.id = `fix-card-${index}`;
+            div.id = `fix-card-${index}`;
 
-                div.innerHTML = `
-                    <div class="fix-card-content">
-                        <div class="fix-title">${entry.title}</div>
+           div.innerHTML = `
+                <div class="fix-card-content">
+                    <div class="fix-title">${entry.title}</div>
 
+                    <div class="fix-row">
                         <input 
                             type="text"
                             id="fix-${index}"
@@ -636,44 +742,52 @@
                             placeholder="Correct artist name"
                         />
 
-                        <button data-index="${index}"
-                            onclick="submitFix(this, '${encodeURIComponent(JSON.stringify(entry))}')">
+                        <button data-index="${index}" class="fix-btn">
                             Commit
                         </button>
                     </div>
-                `;
+                </div>
+            `;
 
-                container.appendChild(div);
+            const button = div.querySelector(".fix-btn");
+
+            button.addEventListener("click", async (e) => {
+                const btn = e.currentTarget;
+                const index = btn.getAttribute("data-index");
+
+                const input = document.getElementById(`fix-${index}`);
+                entry.correction = input.value;
+
+                await submitFix(entry, index);
             });
-        }
 
-        document.getElementById("uploader").value = null;
+            container.appendChild(div);
+        });
     }
 
 
-    async function submitFix(button, encodedContext) {
-        const context = JSON.parse(decodeURIComponent(encodedContext));
-        const index = button.getAttribute("data-index");
-        const input = document.getElementById(`fix-${index}`);
-        context.correction = input.value;
-
+    async function submitFix(context, index) {
         const response = await fetch(`${MEDIA_INGESTION_API_URL}/media_ingestion/fix_uploader`, {
             method: "POST",
-            headers: {"Content-Type": "application/json", "Authorization": getToken()},
-            body: JSON.stringify({
-                context: context,
-            })
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${localStorage.getItem("token")}`
+            },
+            body: JSON.stringify({ context })
         });
 
         if (!response.ok) {
-            console.log("Error: ", response.status);
+            console.log("Error:", response.status);
+
+            if (response.status === 401) {
+                localStorage.removeItem("token");
+                showLoggedOutUi();
+            }
             return;
         }
 
-        const fix_card = document.getElementById(`fix-card-${index}`);
-        fix_card.innerHTML = null;
+        document.getElementById(`fix-card-${index}`)?.remove();
     }
-
 
     function playBlob(newBlob) {
         if (oldSrc) URL.revokeObjectURL(oldSrc);
@@ -774,13 +888,14 @@
 
     let isAddMusicModalOpen = false;
 
-    function toggleAddMusic() {
+    async function toggleAddMusic() {
         const modal = document.getElementById("addMusicModal");
 
         isAddMusicModalOpen = !isAddMusicModalOpen;
 
         if (isAddMusicModalOpen) {
             modal.style.display = "block";
+            await get_fixes();
         } else {
             modal.style.display = "none";
         }
@@ -790,7 +905,7 @@
         if (queue_backlog.length === 0) {
             const response = await fetch(`${MUSIQL_API_URL}/musiql/sample/${encodeURIComponent(uri)}`, {
                 method: "GET",
-                headers: {"Authorization": getToken()}
+                headers: {"Authorization": `Bearer ${localStorage.getItem("token")}`}
             });
             queue_backlog = await response.json();
         }
@@ -810,7 +925,7 @@
             method : "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": getToken()
+                "Authorization": `Bearer ${localStorage.getItem("token")}`
             },
             body : JSON.stringify({history_id : current_hist_id, duration_played: progress})
         })
@@ -823,7 +938,7 @@
         const media_response = await fetch(`${MUSIQL_API_URL}/musiql/serve/${encodeURIComponent(record.uri)}`, {
             method: "GET",
             headers: {
-                "Authorization": getToken()
+                "Authorization": `Bearer ${localStorage.getItem("token")}`
             }
         });
         
