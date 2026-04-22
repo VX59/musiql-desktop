@@ -454,7 +454,6 @@
 
 
 <script>
-
     function getToken() {
         return localStorage.getItem("token");
     }
@@ -464,6 +463,7 @@
 
         if (token) {
             showLoggedInUi();
+            library();
         } else {
             showLoggedOutUi();
         }
@@ -626,6 +626,9 @@
     }
 
     async function library() {
+        const search_bar = document.getElementById("advanced-term");
+        search_bar.value = null;
+        
         const response = await fetch(`${MUSIQL_API_URL}/musiql/search/advanced`, {
             method: "POST",
             headers: {"Content-Type": "application/json", "Authorization": `Bearer ${localStorage.getItem("token")}`},
