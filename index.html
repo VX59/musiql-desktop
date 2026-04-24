@@ -241,6 +241,11 @@
                 order: 1;
             }
         }
+        .nav-buttons {
+            display: flex;
+            gap:4px;
+        }
+
         .nav-buttons button {
             margin-bottom: 12px;
             padding: 8px 14px;
@@ -251,8 +256,13 @@
             color: white;
             font-size: 14px;
         }
+        
         .nav-buttons button:hover {
             background: #333;
+        }
+
+        .nav-buttons .api-token {
+            margin-left: auto;
         }
 
         .add-music-container {
@@ -408,6 +418,8 @@
         <button class="queue" onclick="toggleQueue()">queue</button>
         <button class="add-music" onclick="toggleAddMusic()">add music</button>
         <button class="models" onclick="toggleModels()">recommendation models</button>
+        <button class="logout" onclick="logout()">logout</button>
+        <button class="api-token" onclick="copyApiToken()">copy API token</button>
 
     </div>
     <!-- Upload Section -->
@@ -458,12 +470,15 @@
         return localStorage.getItem("token");
     }
 
-    window.addEventListener("DOMContentLoaded", () => {
-        token = localStorage.getItem("token");
+    async function copyApiToken() {
+        const token = getToken();
+        await navigator.clipboard.writeText(token);
+    }
 
+    window.addEventListener("DOMContentLoaded", async () => {
+        const token = getToken();
         if (token) {
             showLoggedInUi();
-            library();
         } else {
             showLoggedOutUi();
         }
@@ -472,6 +487,9 @@
     function showLoggedInUi() {
         document.getElementById("loggedInUi").style.display = "block";
         document.getElementById("loggedOutUi").style.display = "none";
+        requestAnimationFrame(() => {
+            library();
+        });
     }
 
     function showLoggedOutUi() {
@@ -479,6 +497,10 @@
         document.getElementById("loggedOutUi").style.display = "block";
     }
 
+    function logout() {
+        localStorage.removeItem("token");
+        showLoggedOutUi();
+    }
 
     async function submitLogin() {
         const username = document.getElementById("username").value;
