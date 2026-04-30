@@ -4,16 +4,22 @@
   "description": "",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "evdev": "^0.3.0",
-    "jsmediatags": "^3.9.7"
+    "jsmediatags": "^3.9.7",
+    "svelte": "^4.2.19"
   },
   "devDependencies": {
-    "electron": "^40.4.1"
+    "@sveltejs/vite-plugin-svelte": "^3.1.2",
+    "electron": "^40.4.1",
+    "vite": "^5.4.11"
   }
 }
