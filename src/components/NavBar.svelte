@@ -4,6 +4,8 @@
     export let onLibrary = () => {};
     export let onQueue = () => {};
     export let onAddMusic = () => {};
+    export let queueOpen = false;
+    export let addMusicOpen = false;
 
     function logout() {
         token.set(null);
@@ -17,8 +19,8 @@
 <div class="nav-buttons">
     <span class="brand"><span class="brand-badge">MUSIQL</span></span>
     <button on:click={onLibrary}>library</button>
-    <button on:click={onQueue}>queue</button>
-    <button on:click={onAddMusic}>add music</button>
+    <button class:active={queueOpen} on:click={onQueue}>queue</button>
+    <button class:active={addMusicOpen} on:click={onAddMusic}>add music</button>
     <button class="logout" on:click={logout}>logout</button>
     <button on:click={copyApiToken}>copy API token</button>
 </div>
@@ -44,6 +46,7 @@
         font-size: 14px;
     }
     .nav-buttons button:hover { background: #555; }
+    .nav-buttons button.active { background: #555; }
     .logout { margin-left: auto; }
     .brand {
         font-size: 16px;

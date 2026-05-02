@@ -34,6 +34,8 @@
         onLibrary={loadLibrary}
         onQueue={() => (queueOpen = !queueOpen)}
         onAddMusic={() => (addMusicOpen = !addMusicOpen)}
+        {queueOpen}
+        {addMusicOpen}
     />
     <div class="container">
         <SearchBar onSearch={handleSearch} />
