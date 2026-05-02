@@ -1,5 +1,6 @@
 <script>
-    import { externalSearch, requestMusic } from '../api/musiql.js';
+    import { onMount } from 'svelte';
+    import { externalSearch, requestMusic, getUploadJobs } from '../api/musiql.js';
 
     const SOURCE_TYPES = [
         { value: 'track', label: 'Tracks', enabled: true },
@@ -15,6 +16,25 @@
     let requested = {};
     let loading = false;
     let error = null;
+
+    let jobs = [];
+    let jobsLoading = false;
+    let jobsError = null;
+
+    async function loadJobs() {
+        jobsLoading = true;
+        jobsError = null;
+        try {
+            const data = await getUploadJobs();
+            jobs = Array.isArray(data) ? data : [];
+        } catch (e) {
+            jobsError = `Could not load jobs (${e.message})`;
+        } finally {
+            jobsLoading = false;
+        }
+    }
+
+    onMount(loadJobs);
 
     $: hasResults = tracks.length > 0 || albums.length > 0 || playlists.length > 0;
 
@@ -45,10 +65,10 @@
         }
     }
 
-    async function handleRequest(e, uri, type) {
+    async function handleRequest(e, uri, type, name, association) {
         e.stopPropagation();
         try {
-            await requestMusic(uri, type);
+            await requestMusic(uri, type, name, association);
             requested = { ...requested, [uri]: true };
         } catch (e) {
             error = `Request failed (${e.message})`;
@@ -67,7 +87,7 @@
         <input
             class="search-input"
             type="text"
-            placeholder="Search Spotify..."
+            placeholder="Search titles, albums or playlists"
             bind:value={searchTerm}
             on:keydown={handleKeydown}
         />
@@ -118,7 +138,7 @@
                                         class="request-btn"
                                         class:requested={requested[track.external_uri]}
                                         disabled={requested[track.external_uri]}
-                                        on:click={(e) => handleRequest(e, track.external_uri, 'track')}
+                                        on:click={(e) => handleRequest(e, track.external_uri, 'track', track.title, track.artists.join(', '))}
                                     >
                                         {requested[track.external_uri] ? 'requested' : 'request'}
                                     </button>
@@ -151,7 +171,7 @@
                                         class="request-btn"
                                         class:requested={requested[album.external_uri]}
                                         disabled={requested[album.external_uri]}
-                                        on:click={(e) => handleRequest(e, album.external_uri, 'album')}
+                                        on:click={(e) => handleRequest(e, album.external_uri, 'album', album.name, album.artists.join(', '))}
                                     >
                                         {requested[album.external_uri] ? 'requested' : 'request'}
                                     </button>
@@ -184,7 +204,7 @@
                                         class="request-btn"
                                         class:requested={requested[playlist.external_uri]}
                                         disabled={requested[playlist.external_uri]}
-                                        on:click={(e) => handleRequest(e, playlist.external_uri, 'playlist')}
+                                        on:click={(e) => handleRequest(e, playlist.external_uri, 'playlist', playlist.name, playlist.owner)}
                                     >
                                         {requested[playlist.external_uri] ? 'requested' : 'request'}
                                     </button>
@@ -197,6 +217,54 @@
 
         </div>
     {/if}
+
+    <div class="jobs-section">
+        <div class="jobs-header">
+            <span class="section-header">Upload Jobs</span>
+            <button class="refresh-btn" on:click={loadJobs} disabled={jobsLoading}>
+                {jobsLoading ? '...' : 'refresh'}
+            </button>
+        </div>
+
+        {#if jobsError}
+            <div class="error">{jobsError}</div>
+        {:else if jobsLoading}
+            <div class="jobs-empty">Loading...</div>
+        {:else if jobs.length === 0}
+            <div class="jobs-empty">No jobs yet.</div>
+        {:else}
+            <div class="jobs-scroll">
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Association</th>
+                            <th>Type</th>
+                            <th>Source</th>
+                            <th>Status</th>
+                            <th>Subtasks</th>
+                            <th>Progress</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {#each jobs as job}
+                            <tr class="result-row">
+                                <td class="col-title">{job.name ?? '—'}</td>
+                                <td>{job.association ?? '—'}</td>
+                                <td>{job['job type'] ?? '—'}</td>
+                                <td>{job['source type'] ?? '—'}</td>
+                                <td class="job-status" class:status-done={job.status === 'complete'} class:status-err={job.status === 'error'}>{job.status ?? '—'}</td>
+                                <td>{job.subtasks ?? '—'}</td>
+                                <td>{job.progress ?? '—'}</td>
+                                <td class="col-date">{job['date requested'] ? new Date(job['date requested']).toLocaleDateString() : '—'}</td>
+                            </tr>
+                        {/each}
+                    </tbody>
+                </table>
+            </div>
+        {/if}
+    </div>
 </div>
 
 <style>
@@ -297,7 +365,7 @@
         padding: 6px 8px;
         vertical-align: middle;
     }
-    .result-row:hover { background: #efefed; }
+    .result-row:hover { background: #efefed; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06); }
     .col-artist { width: 20%; }
     .col-title { width: 35%; }
     .col-album { width: 35%; }
@@ -320,4 +388,43 @@
         background: #888;
         cursor: default;
     }
+    .jobs-section {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        border-top: 1px solid #e5e5e5;
+        padding-top: 10px;
+    }
+    .jobs-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .refresh-btn {
+        padding: 4px 10px;
+        border: 1px solid #ccc;
+        border-radius: 2px;
+        background: transparent;
+        font-size: 12px;
+        cursor: pointer;
+        color: #555;
+    }
+    .refresh-btn:hover:not(:disabled) { background: #f0f0f0; }
+    .refresh-btn:disabled { opacity: 0.5; cursor: default; }
+    .jobs-empty {
+        font-size: 13px;
+        color: #888;
+    }
+    .jobs-scroll {
+        overflow-y: auto;
+        max-height: 200px;
+    }
+    .col-date {
+        white-space: nowrap;
+        font-size: 12px;
+        color: #888;
+    }
+    .job-status { font-size: 13px; }
+    .status-done { color: #2a7a2a; }
+    .status-err { color: #c00; }
 </style>

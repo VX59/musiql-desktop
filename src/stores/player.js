@@ -71,7 +71,7 @@ export async function playNextFromQueue() {
     const newQ = [...q];
     const newBacklog = [...backlog];
     while (newQ.length < QUEUE_SIZE && newBacklog.length > 0) {
-        newQ.push(newBacklog.shift());
+        newQ.push({ ...newBacklog.shift(), in_library: true });
     }
     queue.set(newQ);
     queueBacklog.set(newBacklog);

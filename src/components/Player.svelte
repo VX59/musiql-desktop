@@ -12,6 +12,7 @@
     let currentTime = 0;
     let duration = 0;
     let volume = 1;
+    let menuOpen = false;
 
     $: progress = duration > 0 ? (currentTime / duration) * 100 : 0;
     $: volumeFill = volume * 100;
@@ -39,6 +40,11 @@
         else audioEl.pause();
     }
 
+    function handleReportRerecord() {
+        menuOpen = false;
+        console.log('Report for re-recording:', $currentTrack?.uri);
+    }
+
     onMount(() => {
         registerAudioElement(audioEl);
 
@@ -56,10 +62,26 @@
     });
 </script>
 
+<svelte:window on:click={() => (menuOpen = false)} />
+
 <div class="player-bar">
     <div class="now-playing">
-        <div class="title">{$currentTrack?.title ?? ''}</div>
-        <div class="artist">{$currentTrack?.artists ?? ''}</div>
+        <div class="track-info">
+            <div class="title">{$currentTrack?.title ?? ''}</div>
+            <div class="artist">{$currentTrack?.artists ?? ''}</div>
+        </div>
+        {#if $currentTrack}
+            <div class="more-wrapper">
+                <button class="more-btn" on:click|stopPropagation={() => (menuOpen = !menuOpen)}>⋮</button>
+                {#if menuOpen}
+                    <div class="dropdown">
+                        <button on:click|stopPropagation={handleReportRerecord}>
+                            Report for re-recording
+                        </button>
+                    </div>
+                {/if}
+            </div>
+        {/if}
     </div>
 
     <div class="controls">
@@ -106,7 +128,7 @@
         left: 0;
         width: 100%;
         display: grid;
-        grid-template-columns: minmax(160px, 240px) 1fr auto;
+        grid-template-columns: minmax(160px, 320px) 1fr auto;
         align-items: center;
         gap: 16px;
         padding: 12px 20px;
@@ -116,7 +138,16 @@
         box-sizing: border-box;
     }
 
-    .now-playing { min-width: 0; }
+    .now-playing {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .track-info {
+        min-width: 0;
+        flex: 1;
+    }
     .title {
         font-size: 14px;
         font-weight: 600;
@@ -132,6 +163,48 @@
         overflow: hidden;
         text-overflow: ellipsis;
     }
+
+    .more-wrapper {
+        position: relative;
+        flex-shrink: 0;
+    }
+    .more-btn {
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        border: none;
+        border-radius: 2px;
+        cursor: pointer;
+        background: transparent;
+        color: #555;
+        font-size: 16px;
+        line-height: 1;
+    }
+    .more-btn:hover { background: #e8e8e6; }
+    .dropdown {
+        position: absolute;
+        left: 0;
+        bottom: calc(100% + 6px);
+        background: #fff;
+        border-radius: 4px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+        z-index: 1100;
+        min-width: 180px;
+        overflow: hidden;
+    }
+    .dropdown button {
+        display: block;
+        width: 100%;
+        padding: 10px 14px;
+        border: none;
+        background: none;
+        text-align: left;
+        font-size: 13px;
+        color: #333;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+    .dropdown button:hover { background: #f5f5f5; }
 
     .controls {
         display: flex;
@@ -223,7 +296,7 @@
 
     @media (max-width: 700px) {
         .player-bar {
-            grid-template-columns: minmax(120px, 180px) 1fr auto;
+            grid-template-columns: minmax(120px, 240px) 1fr auto;
             gap: 10px;
             padding: 10px 12px;
         }

@@ -5,6 +5,9 @@
     let rows = [];
     $: rows = $queue.map(r => ({ ...r }));
 
+    let draggedIndex = null;
+    let dragOverIndex = null;
+
     function handleRemove(e, record) {
         e.stopPropagation();
         queue.update(q => q.filter(item => item.uri !== record.uri));
@@ -21,6 +24,39 @@
         }
         rows = [...rows];
     }
+
+    function dragStart(e, i) {
+        draggedIndex = i;
+        e.dataTransfer.effectAllowed = 'move';
+    }
+
+    function dragOver(e, i) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        dragOverIndex = i;
+    }
+
+    function dragEnd() {
+        draggedIndex = null;
+        dragOverIndex = null;
+    }
+
+    function drop(e, i) {
+        e.preventDefault();
+        if (draggedIndex === null || draggedIndex === i) {
+            draggedIndex = null;
+            dragOverIndex = null;
+            return;
+        }
+        queue.update(q => {
+            const reordered = [...q];
+            const [moved] = reordered.splice(draggedIndex, 1);
+            reordered.splice(i, 0, moved);
+            return reordered;
+        });
+        draggedIndex = null;
+        dragOverIndex = null;
+    }
 </script>
 
 {#if rows.length > 0}
@@ -30,16 +66,28 @@
     <table class="results-table">
         <tbody>
             {#each rows as row, i}
-                <tr class="tablulated-result" on:click={() => playRecord(row)}>
+                <tr
+                    class="tablulated-result"
+                    class:dragging={draggedIndex === i}
+                    class:drag-over={dragOverIndex === i && draggedIndex !== i}
+                    draggable="true"
+                    on:click={() => playRecord(row)}
+                    on:dragstart={(e) => dragStart(e, i)}
+                    on:dragover={(e) => dragOver(e, i)}
+                    on:dragleave={() => dragOverIndex = null}
+                    on:drop={(e) => drop(e, i)}
+                    on:dragend={dragEnd}
+                >
+                    <td class="drag-handle" on:click|stopPropagation>⠿</td>
                     <td class="result-artist">{row.artists}</td>
                     <td class="result-title">{row.title}</td>
                     <td class="result-album">{row.album}</td>
                     <td class="button-col">
                         <div class="btn-left">
+                            <button on:click={(e) => handleRemove(e, row)}>remove</button>
                             <button class="library-btn" on:click={(e) => handleLibraryToggle(e, row, i)}>
                                 {row.in_library ? '-' : '+'}
                             </button>
-                            <button on:click={(e) => handleRemove(e, row)}>remove</button>
                         </div>
                     </td>
                 </tr>
@@ -74,6 +122,21 @@
         padding: 6px 8px;
         vertical-align: middle;
     }
+    .tablulated-result.dragging {
+        opacity: 0.4;
+    }
+    .tablulated-result.drag-over {
+        border-top: 2px solid #333;
+    }
+    .drag-handle {
+        width: 16px;
+        color: #bbb;
+        cursor: grab;
+        user-select: none;
+        font-size: 14px;
+        padding-right: 4px;
+    }
+    .drag-handle:active { cursor: grabbing; }
     .result-artist { width: 30%; }
     .button-col {
         text-align: right;

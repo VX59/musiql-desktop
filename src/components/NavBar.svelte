@@ -54,8 +54,8 @@
     }
     .brand-badge {
         display: inline-block;
-        background: #dddddd;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        background: #efefed;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.14);
         color: #111;
         font-size: 16px;
         font-weight: 700;
