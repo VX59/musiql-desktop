@@ -28,8 +28,8 @@
         display: flex;
         gap: 4px;
         padding: 10px 16px;
-        background: #f7f7f5;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        background: #efefed;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
         position: sticky;
         top: 0;
         z-index: 100;

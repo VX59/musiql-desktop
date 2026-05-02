@@ -54,7 +54,7 @@
         {/if}
     </div>
 </div>
-<Player />
+<Player onQueue={() => (queueOpen = !queueOpen)} {queueOpen} />
 
 <style>
     .page {

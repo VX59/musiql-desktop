@@ -64,6 +64,15 @@
 {/if}
 <div class="results-scroll">
     <table class="results-table">
+        <thead>
+            <tr>
+                <th></th>
+                <th>Artist</th>
+                <th>Title</th>
+                <th>Album</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
         <tbody>
             {#each rows as row, i}
                 <tr
@@ -110,6 +119,18 @@
     .results-table {
         width: 100%;
         border-collapse: collapse;
+    }
+    .results-table thead th {
+        position: sticky;
+        top: 0;
+        background: #f7f7f5;
+        z-index: 2;
+        text-align: left;
+        padding: 8px;
+        font-size: 12px;
+        color: #666;
+        font-weight: 600;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.07);
     }
     .tablulated-result {
         cursor: pointer;

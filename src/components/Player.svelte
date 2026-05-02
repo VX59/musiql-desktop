@@ -6,6 +6,10 @@
         playNextFromQueue,
         playPrevious,
     } from '../stores/player.js';
+    import { addToLibrary, removeFromLibrary } from '../api/musiql.js';
+
+    export let onQueue = () => {};
+    export let queueOpen = false;
 
     let audioEl;
     let paused = true;
@@ -38,6 +42,17 @@
     function togglePlay() {
         if (audioEl.paused) audioEl.play();
         else audioEl.pause();
+    }
+
+    async function handleLibraryToggle() {
+        if (!$currentTrack) return;
+        if ($currentTrack.in_library) {
+            await removeFromLibrary($currentTrack.uri);
+            currentTrack.update(t => ({ ...t, in_library: false }));
+        } else {
+            await addToLibrary($currentTrack.uri);
+            currentTrack.update(t => ({ ...t, in_library: true }));
+        }
     }
 
     function handleReportRerecord() {
@@ -116,6 +131,12 @@
             value={volume}
             on:input={setVolume}
         />
+        {#if $currentTrack}
+            <button class="ctrl-btn library-btn" on:click={handleLibraryToggle}>
+                {$currentTrack.in_library ? '-' : '+'}
+            </button>
+        {/if}
+        <button class="ctrl-btn" class:active={queueOpen} on:click={onQueue}>queue</button>
     </div>
 </div>
 
@@ -132,8 +153,8 @@
         align-items: center;
         gap: 16px;
         padding: 12px 20px;
-        background: #f7f7f5;
-        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+        background: #efefed;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.12);
         z-index: 1000;
         box-sizing: border-box;
     }
@@ -231,7 +252,7 @@
         cursor: pointer;
     }
     .slider::-webkit-slider-runnable-track {
-        height: 12px;
+        height: 20px;
         border-radius: 6px;
         background: linear-gradient(to right, #333 var(--fill), #ddd var(--fill));
     }
@@ -239,20 +260,20 @@
         -webkit-appearance: none;
         appearance: none;
         width: 4px;
-        height: 22px;
+        height: 26px;
         border-radius: 3px;
         background: #111;
         cursor: pointer;
-        margin-top: -5px;
+        margin-top: -3px;
     }
     .slider::-moz-range-track {
-        height: 12px;
+        height: 20px;
         border-radius: 6px;
         background: linear-gradient(to right, #333 var(--fill), #ddd var(--fill));
     }
     .slider::-moz-range-thumb {
         width: 4px;
-        height: 22px;
+        height: 26px;
         border-radius: 3px;
         background: #111;
         cursor: pointer;
@@ -293,10 +314,15 @@
         line-height: 1;
     }
     .ctrl-btn:hover { background: #555; }
+    .ctrl-btn.active { background: #555; }
+    .ctrl-btn.library-btn {
+        width: 36px;
+        padding: 0;
+    }
 
     @media (max-width: 700px) {
         .player-bar {
-            grid-template-columns: minmax(120px, 240px) 1fr auto;
+            grid-template-columns: minmax(120px, 180px) 1fr auto;
             gap: 10px;
             padding: 10px 12px;
         }
