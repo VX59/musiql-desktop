@@ -4,8 +4,10 @@
     export let onLibrary = () => {};
     export let onQueue = () => {};
     export let onAddMusic = () => {};
+    export let onUploads = () => {};
     export let queueOpen = false;
     export let addMusicOpen = false;
+    export let uploadsOpen = false;
 
     function logout() {
         token.set(null);
@@ -21,6 +23,7 @@
     <button on:click={onLibrary}>library</button>
     <button class:active={queueOpen} on:click={onQueue}>queue</button>
     <button class:active={addMusicOpen} on:click={onAddMusic}>add music</button>
+    <button class:active={uploadsOpen} on:click={onUploads}>uploads</button>
     <button class="logout" on:click={logout}>logout</button>
     <button on:click={copyApiToken}>copy API token</button>
 </div>

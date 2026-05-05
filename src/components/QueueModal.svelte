@@ -8,9 +8,9 @@
     let draggedIndex = null;
     let dragOverIndex = null;
 
-    function handleRemove(e, record) {
+    function handleRemove(e, i) {
         e.stopPropagation();
-        queue.update(q => q.filter(item => item.uri !== record.uri));
+        queue.update(q => q.filter((_, idx) => idx !== i));
     }
 
     async function handleLibraryToggle(e, record, i) {
@@ -93,7 +93,7 @@
                     <td class="result-album">{row.album}</td>
                     <td class="button-col">
                         <div class="btn-left">
-                            <button on:click={(e) => handleRemove(e, row)}>remove</button>
+                            <button on:click={(e) => handleRemove(e, i)}>remove</button>
                             <button class="library-btn" on:click={(e) => handleLibraryToggle(e, row, i)}>
                                 {row.in_library ? '-' : '+'}
                             </button>
@@ -160,13 +160,11 @@
     .drag-handle:active { cursor: grabbing; }
     .result-artist { width: 30%; }
     .button-col {
-        text-align: right;
         white-space: nowrap;
     }
     .btn-left {
         display: flex;
         gap: 3px;
-        justify-content: flex-end;
     }
     .btn-left button {
         width: 70px;

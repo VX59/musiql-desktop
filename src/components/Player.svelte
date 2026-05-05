@@ -6,7 +6,7 @@
         playNextFromQueue,
         playPrevious,
     } from '../stores/player.js';
-    import { addToLibrary, removeFromLibrary } from '../api/musiql.js';
+    import { addToLibrary, removeFromLibrary, reportRecording } from '../api/musiql.js';
 
     export let onQueue = () => {};
     export let queueOpen = false;
@@ -55,9 +55,10 @@
         }
     }
 
-    function handleReportRerecord() {
+    async function handleReportRerecord() {
         menuOpen = false;
-        console.log('Report for re-recording:', $currentTrack?.uri);
+        if (!$currentTrack) return;
+        await reportRecording($currentTrack.uri);
     }
 
     onMount(() => {

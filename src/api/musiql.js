@@ -102,6 +102,15 @@ export async function getUploadJobs() {
     return res.json();
 }
 
+export async function reportRecording(uri) {
+    const res = await fetch(`${config.MUSIQL_API_URL}/report/recording`, {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify({ uri }),
+    });
+    if (!res.ok) { handleUnauthorized(res); throw new Error(res.status); }
+}
+
 export async function sampleNext(uri) {
     const res = await fetch(`${config.MUSIQL_API_URL}/musiql/sample/${uri}`, {
         headers: { 'Authorization': `Bearer ${get(token)}` },
