@@ -82,6 +82,11 @@
 
 <div class="player-bar">
     <div class="now-playing">
+        {#if $currentTrack?.thumbnail_url}
+            <img class="album-thumb" src={$currentTrack.thumbnail_url} alt="album art" />
+        {:else}
+            <div class="album-thumb thumb-placeholder"></div>
+        {/if}
         <div class="track-info">
             <div class="title">{$currentTrack?.title ?? ''}</div>
             <div class="artist">{$currentTrack?.artists ?? ''}</div>
@@ -164,7 +169,17 @@
         min-width: 0;
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 10px;
+    }
+    .album-thumb {
+        width: 44px;
+        height: 44px;
+        border-radius: 2px;
+        object-fit: cover;
+        flex-shrink: 0;
+    }
+    .thumb-placeholder {
+        background: #ddd;
     }
     .track-info {
         min-width: 0;

@@ -78,7 +78,7 @@ export async function externalSearch(searchTerm, sourceTypes) {
 }
 
 export async function requestMusic(sourceUri, sourceType, name, association) {
-    const res = await fetch(`${config.MUSIQL_API_URL}/add/music/`, {
+    const res = await fetch(`${config.MUSIQL_API_URL}/upload/music/`, {
         method: 'POST',
         headers: headers(),
         body: JSON.stringify(
@@ -90,7 +90,11 @@ export async function requestMusic(sourceUri, sourceType, name, association) {
             }
         ),
     });
-    if (!res.ok) { handleUnauthorized(res); throw new Error(res.status); }
+    if (!res.ok) {
+        handleUnauthorized(res);
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.detail ?? res.status);
+    }
     return res.json();
 }
 

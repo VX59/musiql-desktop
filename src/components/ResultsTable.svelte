@@ -33,6 +33,7 @@
     <table class="results-table">
         <thead>
             <tr>
+                <th class="col-img"></th>
                 <th>Artist</th>
                 <th>Title</th>
                 <th>Album</th>
@@ -43,6 +44,13 @@
         <tbody>
             {#each rows as row, i}
                 <tr class="tablulated-result" on:click={() => playRecord(row)}>
+                    <td class="col-img">
+                        {#if row.preview_url}
+                            <img class="preview-img" src={row.preview_url} alt="" />
+                        {:else}
+                            <div class="preview-img preview-placeholder"></div>
+                        {/if}
+                    </td>
                     <td class="result-artist">{row.artists}</td>
                     <td class="result-title">{row.title}</td>
                     <td class="result-album">{row.album}</td>
@@ -90,6 +98,20 @@
     .tablulated-result td {
         padding: 6px 8px;
         vertical-align: middle;
+    }
+    .col-img {
+        width: 40px;
+        padding: 4px 4px 4px 8px;
+    }
+    .preview-img {
+        display: block;
+        width: 32px;
+        height: 32px;
+        border-radius: 2px;
+        object-fit: cover;
+    }
+    .preview-placeholder {
+        background: #ddd;
     }
     .result-artist { width: 15%; }
     .result-title { width: 30%; }

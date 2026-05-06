@@ -67,6 +67,7 @@
         <thead>
             <tr>
                 <th></th>
+                <th class="col-img"></th>
                 <th>Artist</th>
                 <th>Title</th>
                 <th>Album</th>
@@ -88,6 +89,13 @@
                     on:dragend={dragEnd}
                 >
                     <td class="drag-handle" on:click|stopPropagation>⠿</td>
+                    <td class="col-img">
+                        {#if row.preview_url}
+                            <img class="preview-img" src={row.preview_url} alt="" />
+                        {:else}
+                            <div class="preview-img preview-placeholder"></div>
+                        {/if}
+                    </td>
                     <td class="result-artist">{row.artists}</td>
                     <td class="result-title">{row.title}</td>
                     <td class="result-album">{row.album}</td>
@@ -158,6 +166,20 @@
         padding-right: 4px;
     }
     .drag-handle:active { cursor: grabbing; }
+    .col-img {
+        width: 40px;
+        padding: 4px;
+    }
+    .preview-img {
+        display: block;
+        width: 32px;
+        height: 32px;
+        border-radius: 2px;
+        object-fit: cover;
+    }
+    .preview-placeholder {
+        background: #ddd;
+    }
     .result-artist { width: 30%; }
     .button-col {
         white-space: nowrap;

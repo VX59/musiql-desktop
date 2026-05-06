@@ -7,16 +7,34 @@
         { value: 'playlist', label: 'Playlists', enabled: true },
     ];
 
+    const URI_TYPES = ['track', 'album', 'playlist'];
+
+    // mode: 'search' | 'uri'
+    let mode = 'search';
+
+    // search mode state
     let searchTerm = '';
     let selectedTypes = ['track'];
     let tracks = [];
     let albums = [];
     let playlists = [];
+
+    // uri mode state
+    let uriInput = '';
+    let uriType = 'track';
+    let uriRequested = false;
+    let uriLoading = false;
+
     let requested = {};
     let loading = false;
     let error = null;
 
     $: hasResults = tracks.length > 0 || albums.length > 0 || playlists.length > 0;
+
+    function switchMode(m) {
+        mode = m;
+        error = null;
+    }
 
     function toggleType(value) {
         if (selectedTypes.includes(value)) {
@@ -55,42 +73,99 @@
         }
     }
 
+    const BASE62_RE = /^[0-9A-Za-z]{22}$/;
+
+    async function handleUriRequest() {
+        const trimmed = uriInput.trim();
+        if (!trimmed) return;
+        if (!BASE62_RE.test(trimmed)) {
+            error = 'Invalid URI — must be a 22-character base62 ID (e.g. 3NMZBauh9NhD6nmdZCda6r)';
+            return;
+        }
+        uriLoading = true;
+        error = null;
+        try {
+            await requestMusic(trimmed, uriType, '—', '—');
+            uriRequested = true;
+            uriInput = '';
+        } catch (e) {
+            error = `Request failed (${e.message})`;
+        } finally {
+            uriLoading = false;
+        }
+    }
+
     function handleKeydown(e) {
         if (e.key === 'Enter') handleSearch();
     }
+
+    function handleUriKeydown(e) {
+        if (e.key === 'Enter') handleUriRequest();
+    }
 </script>
 
-<div class="search-row">
-    <input
-        class="search-input"
-        type="text"
-        placeholder="Search titles, albums or playlists"
-        bind:value={searchTerm}
-        on:keydown={handleKeydown}
-    />
-    <div class="type-toggles">
-        {#each SOURCE_TYPES as t}
-            <label class="type-label" class:disabled={!t.enabled}>
-                <input
-                    type="checkbox"
-                    checked={selectedTypes.includes(t.value)}
-                    disabled={!t.enabled}
-                    on:change={() => toggleType(t.value)}
-                />
-                {t.label}
-            </label>
-        {/each}
-    </div>
-    <button class="search-btn" on:click={handleSearch} disabled={loading}>
-        {loading ? '...' : 'search'}
-    </button>
+<div class="mode-tabs">
+    <button class="mode-tab" class:active={mode === 'search'} on:click={() => switchMode('search')}>search</button>
+    <button class="mode-tab" class:active={mode === 'uri'} on:click={() => switchMode('uri')}>uri</button>
 </div>
+
+{#if mode === 'search'}
+    <div class="search-row">
+        <input
+            class="search-input"
+            type="text"
+            placeholder="Search titles, albums or playlists"
+            bind:value={searchTerm}
+            on:keydown={handleKeydown}
+        />
+        <div class="seg-group">
+            {#each SOURCE_TYPES as t}
+                <button
+                    class="seg-btn"
+                    class:active={selectedTypes.includes(t.value)}
+                    disabled={!t.enabled}
+                    on:click={() => toggleType(t.value)}
+                >{t.label}</button>
+            {/each}
+        </div>
+        <button class="search-btn" on:click={handleSearch} disabled={loading}>
+            {loading ? '...' : 'search'}
+        </button>
+    </div>
+{:else}
+    <div class="uri-row">
+        <input
+            class="search-input"
+            type="text"
+            placeholder="Base 62 Spotify URI"
+            bind:value={uriInput}
+            on:keydown={handleUriKeydown}
+        />
+        <div class="seg-group">
+            {#each URI_TYPES as t}
+                <button
+                    class="seg-btn"
+                    class:active={uriType === t}
+                    on:click={() => uriType = t}
+                >{t}</button>
+            {/each}
+        </div>
+        <button
+            class="search-btn"
+            class:requested={uriRequested}
+            on:click={handleUriRequest}
+            disabled={uriLoading || uriRequested}
+        >
+            {uriLoading ? '...' : uriRequested ? 'requested' : 'request'}
+        </button>
+    </div>
+{/if}
 
 {#if error}
     <div class="error">{error}</div>
 {/if}
 
-{#if hasResults}
+{#if mode === 'search' && hasResults}
     <div class="results-scroll">
 
         {#if tracks.length > 0}
@@ -196,7 +271,27 @@
 {/if}
 
 <style>
-    .search-row {
+    .mode-tabs {
+        display: flex;
+        gap: 2px;
+        margin-bottom: 10px;
+    }
+    .mode-tab {
+        padding: 5px 14px;
+        border: 1px solid #ccc;
+        border-radius: 2px;
+        background: #f7f7f5;
+        color: #555;
+        font-size: 13px;
+        cursor: pointer;
+    }
+    .mode-tab.active {
+        background: #333;
+        color: #fff;
+        border-color: #333;
+    }
+    .mode-tab:hover:not(.active) { background: #efefed; }
+    .search-row, .uri-row {
         display: flex;
         align-items: center;
         gap: 8px;
@@ -211,22 +306,30 @@
         outline: none;
     }
     .search-input:focus { border-color: #333; }
-    .type-toggles {
+    .seg-group {
         display: flex;
-        gap: 10px;
     }
-    .type-label {
-        display: flex;
-        align-items: center;
-        gap: 4px;
+    .seg-btn {
+        padding: 8px 12px;
+        border: 1px solid #ccc;
+        border-right: none;
+        background: #f7f7f5;
+        color: #555;
         font-size: 13px;
         cursor: pointer;
         user-select: none;
+        white-space: nowrap;
     }
-    .type-label.disabled {
-        color: #aaa;
-        cursor: default;
+    .seg-btn:first-child { border-radius: 2px 0 0 2px; }
+    .seg-btn:last-child  { border-radius: 0 2px 2px 0; border-right: 1px solid #ccc; }
+    .seg-btn.active {
+        background: #333;
+        color: #fff;
+        border-color: #333;
     }
+    .seg-btn.active + .seg-btn { border-left-color: #333; }
+    .seg-btn:disabled { color: #bbb; cursor: default; }
+    .seg-btn:hover:not(.active):not(:disabled) { background: #efefed; }
     .search-btn {
         padding: 8px 14px;
         border: none;
@@ -235,9 +338,11 @@
         color: #fff;
         font-size: 14px;
         cursor: pointer;
+        white-space: nowrap;
     }
     .search-btn:hover:not(:disabled) { background: #555; }
     .search-btn:disabled { opacity: 0.5; cursor: default; }
+    .search-btn.requested { background: #888; }
     .error {
         font-size: 13px;
         color: #c00;
