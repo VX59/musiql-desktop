@@ -73,7 +73,11 @@ export async function externalSearch(searchTerm, sourceTypes) {
         headers: headers(),
         body: JSON.stringify({ search_term: searchTerm, source_types: sourceTypes }),
     });
-    if (!res.ok) { handleUnauthorized(res); throw new Error(res.status); }
+    if (!res.ok) {
+        handleUnauthorized(res);
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.detail ?? res.status);
+    }
     return res.json();
 }
 
