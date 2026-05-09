@@ -57,28 +57,28 @@ export async function playPrevious() {
 export async function playNextFromQueue() {
     const uri = get(lastUri);
 
-    try {
-        let backlog = get(queueBacklog);
-        if (backlog.length === 0) {
+    let backlog = get(queueBacklog);
+    if (backlog.length === 0) {
+        try {
             backlog = await sampleNext(uri);
             queueBacklog.set(backlog);
+        } catch (err) {
+            console.error('[playNextFromQueue] sampleNext failed:', err);
+            backlog = [];
         }
-
-        const q = get(queue);
-        const newQ = [...q];
-        const newBacklog = [...backlog];
-        while (newQ.length < QUEUE_SIZE && newBacklog.length > 0) {
-            newQ.push({ ...newBacklog.shift(), in_library: true });
-        }
-        queue.set(newQ);
-        queueBacklog.set(newBacklog);
-
-        if (newQ.length === 0) return;
-        const [next, ...rest] = newQ;
-        queue.set(rest);
-        await playRecord(next);
-    } catch (err) {
-        console.error('[playNextFromQueue] failed:', err);
-        throw err;
     }
+
+    const q = get(queue);
+    const newQ = [...q];
+    const newBacklog = [...backlog];
+    while (newQ.length < QUEUE_SIZE && newBacklog.length > 0) {
+        newQ.push({ ...newBacklog.shift(), in_library: true });
+    }
+    queue.set(newQ);
+    queueBacklog.set(newBacklog);
+
+    if (newQ.length === 0) return;
+    const [next, ...rest] = newQ;
+    queue.set(rest);
+    await playRecord(next);
 }
