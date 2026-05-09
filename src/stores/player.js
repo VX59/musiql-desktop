@@ -9,7 +9,6 @@ export const lastUri = writable(null);
 export const playHistory = writable([]);
 
 let audioEl = null;
-let oldBlobUrl = null;
 const QUEUE_SIZE = 10;
 
 export function registerAudioElement(el) {
@@ -34,11 +33,8 @@ async function _loadAndPlay(record) {
 
     if (res.headers.get('Content-Type') === 'application/json') {
         const { url } = await res.json();
-        const blob = await fetch(url).then(r => r.blob());
-        if (oldBlobUrl) URL.revokeObjectURL(oldBlobUrl);
-        oldBlobUrl = URL.createObjectURL(blob);
         if (audioEl) {
-            audioEl.src = oldBlobUrl;
+            audioEl.src = url;
             audioEl.play();
         }
     }
@@ -61,23 +57,28 @@ export async function playPrevious() {
 export async function playNextFromQueue() {
     const uri = get(lastUri);
 
-    let backlog = get(queueBacklog);
-    if (backlog.length === 0) {
-        backlog = await sampleNext(uri);
-        queueBacklog.set(backlog);
-    }
+    try {
+        let backlog = get(queueBacklog);
+        if (backlog.length === 0) {
+            backlog = await sampleNext(uri);
+            queueBacklog.set(backlog);
+        }
 
-    const q = get(queue);
-    const newQ = [...q];
-    const newBacklog = [...backlog];
-    while (newQ.length < QUEUE_SIZE && newBacklog.length > 0) {
-        newQ.push({ ...newBacklog.shift(), in_library: true });
-    }
-    queue.set(newQ);
-    queueBacklog.set(newBacklog);
+        const q = get(queue);
+        const newQ = [...q];
+        const newBacklog = [...backlog];
+        while (newQ.length < QUEUE_SIZE && newBacklog.length > 0) {
+            newQ.push({ ...newBacklog.shift(), in_library: true });
+        }
+        queue.set(newQ);
+        queueBacklog.set(newBacklog);
 
-    if (newQ.length === 0) return;
-    const [next, ...rest] = newQ;
-    queue.set(rest);
-    await playRecord(next);
+        if (newQ.length === 0) return;
+        const [next, ...rest] = newQ;
+        queue.set(rest);
+        await playRecord(next);
+    } catch (err) {
+        console.error('[playNextFromQueue] failed:', err);
+        throw err;
+    }
 }
