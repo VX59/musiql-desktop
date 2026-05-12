@@ -76,7 +76,8 @@ export async function externalSearch(searchTerm, sourceTypes) {
     if (!res.ok) {
         handleUnauthorized(res);
         const body = await res.json().catch(() => null);
-        throw new Error(body?.detail ?? res.status);
+        const detail = body?.detail;
+        throw new Error(typeof detail === 'string' ? detail : detail?.message ?? res.status);
     }
     return res.json();
 }
@@ -97,7 +98,8 @@ export async function requestMusic(sourceUri, sourceType, name, association) {
     if (!res.ok) {
         handleUnauthorized(res);
         const body = await res.json().catch(() => null);
-        throw new Error(body?.detail ?? res.status);
+        const detail = body?.detail;
+        throw new Error(typeof detail === 'string' ? detail : detail?.message ?? res.status);
     }
     return res.json();
 }
