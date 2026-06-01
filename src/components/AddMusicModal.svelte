@@ -3,7 +3,7 @@
 
     const SOURCE_TYPES = [
         { value: 'track',    label: 'Tracks',    enabled: true },
-        { value: 'album',    label: 'Albums',    enabled: false },
+        { value: 'album',    label: 'Albums',    enabled: true },
         { value: 'playlist', label: 'Playlists', enabled: true },
     ];
 
@@ -216,14 +216,14 @@
                     {#each albums as album}
                         <tr class="result-row">
                             <td class="col-artist">{album.artists.join(', ')}</td>
-                            <td class="col-title">{album.name}</td>
-                            <td>{album.total_tracks}</td>
+                            <td class="col-title">{album.title}</td>
+                            <td>{album.tracks}</td>
                             <td class="col-action">
                                 <button
                                     class="request-btn"
                                     class:requested={requested[album.external_uri]}
                                     disabled={requested[album.external_uri]}
-                                    on:click={(e) => handleRequest(e, album.external_uri, 'album', album.name, album.artists.join(', '))}
+                                    on:click={(e) => handleRequest(e, album.external_uri, 'album', album.title, album.artists.join(', '))}
                                 >
                                     {requested[album.external_uri] ? 'requested' : 'request'}
                                 </button>
