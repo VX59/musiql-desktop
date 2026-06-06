@@ -18,7 +18,7 @@ function handleUnauthorized(res) {
 }
 
 export async function login(username, password) {
-    const res = await fetch(`${config.MUSIQL_API_URL}/musiql/login/user`, {
+    const res = await fetch(`${config.MUSIQL_API_URL}/login/user`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
@@ -28,7 +28,7 @@ export async function login(username, password) {
 }
 
 export async function searchAdvanced(term, histId, durationPlayed) {
-    const res = await fetch(`${config.MUSIQL_API_URL}/musiql/search/advanced`, {
+    const res = await fetch(`${config.MUSIQL_API_URL}/search/advanced`, {
         method: 'POST',
         headers: headers(),
         body: JSON.stringify({ search_term: term, history_id: histId, duration_played: durationPlayed }),
@@ -38,21 +38,21 @@ export async function searchAdvanced(term, histId, durationPlayed) {
 }
 
 export async function addToLibrary(uri) {
-    const res = await fetch(`${config.MUSIQL_API_URL}/musiql/library/add/${uri}`, {
+    const res = await fetch(`${config.MUSIQL_API_URL}/library/add/${uri}`, {
         headers: headers(),
     });
     if (!res.ok) handleUnauthorized(res);
 }
 
 export async function removeFromLibrary(uri) {
-    const res = await fetch(`${config.MUSIQL_API_URL}/musiql/library/remove/${uri}`, {
+    const res = await fetch(`${config.MUSIQL_API_URL}/library/remove/${uri}`, {
         headers: headers(),
     });
     if (!res.ok) handleUnauthorized(res);
 }
 
 export async function logEngagement(histId, durationPlayed) {
-    await fetch(`${config.MUSIQL_API_URL}/musiql/log/engagement/`, {
+    await fetch(`${config.MUSIQL_API_URL}/log/engagement/`, {
         method: 'POST',
         headers: headers(),
         body: JSON.stringify({ history_id: histId, duration_played: durationPlayed }),
@@ -60,7 +60,7 @@ export async function logEngagement(histId, durationPlayed) {
 }
 
 export async function serveMusic(uri) {
-    const res = await fetch(`${config.MUSIQL_API_URL}/musiql/serve/${uri}`, {
+    const res = await fetch(`${config.MUSIQL_API_URL}/serve/${uri}`, {
         headers: { 'Authorization': `Bearer ${get(token)}` },
     });
     if (!res.ok) { handleUnauthorized(res); throw new Error(res.status); }
@@ -122,8 +122,24 @@ export async function reportRecording(uri) {
 }
 
 export async function sampleNext(uri) {
-    const res = await fetch(`${config.MUSIQL_API_URL}/musiql/sample/${uri}`, {
+    const res = await fetch(`${config.MUSIQL_API_URL}/sample/${uri}`, {
         headers: { 'Authorization': `Bearer ${get(token)}` },
+    });
+    if (!res.ok) { handleUnauthorized(res); throw new Error(res.status); }
+    return res.json();
+}
+
+export async function getAlbum(albumUri) {
+    const res = await fetch(`${config.MUSIQL_API_URL}/album/${albumUri}`, {
+        headers: headers(),
+    });
+    if (!res.ok) { handleUnauthorized(res); throw new Error(res.status); }
+    return res.json();
+}
+
+export async function getArtist(artistUri) {
+    const res = await fetch(`${config.MUSIQL_API_URL}/artist/${artistUri}`, {
+        headers: headers(),
     });
     if (!res.ok) { handleUnauthorized(res); throw new Error(res.status); }
     return res.json();

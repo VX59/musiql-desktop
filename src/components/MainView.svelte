@@ -1,7 +1,7 @@
 <script>
     import { onMount } from 'svelte';
     import { get } from 'svelte/store';
-    import { searchAdvanced } from '../api/musiql.js';
+    import { searchAdvanced, getAlbum, getArtist } from '../api/musiql.js';
     import { currentHistId, getProgress } from '../stores/player.js';
     import SearchBar from './SearchBar.svelte';
     import ResultsTable from './ResultsTable.svelte';
@@ -10,8 +10,22 @@
     import UploadsModal from './UploadsModal.svelte';
     import NavBar from './NavBar.svelte';
     import Player from './Player.svelte';
+    import AlbumPage from './AlbumPage.svelte';
+    import ArtistPage from './ArtistPage.svelte';
 
     let searchResults = null;
+    let currentAlbum = null;
+    let currentArtist = null;
+
+    async function navigateToAlbum(albumUri) {
+        currentAlbum = await getAlbum(albumUri);
+        currentArtist = null;
+    }
+
+    async function navigateToArtist(artistUri) {
+        currentArtist = await getArtist(artistUri);
+        currentAlbum = null;
+    }
     let queueOpen = false;
     let addMusicOpen = false;
     let uploadsOpen = false;
@@ -85,36 +99,46 @@
         {uploadsOpen}
     />
     <div class="container" bind:this={containerEl}>
-        <SearchBar onSearch={handleSearch} />
-        {#each panels as panel, i}
-            <div
-                class="card"
-                class:card-fill={panel.id === 'results' && heights[panel.id] == null}
-                data-panel={panel.id}
-                style={heights[panel.id] != null
-                    ? `height: ${heights[panel.id]}px`
-                    : panel.id !== 'results' ? `height: ${panel.defaultH}px` : ''}
-            >
-                {#if panel.id === 'addMusic'}<AddMusicModal />{/if}
-                {#if panel.id === 'queue'}<QueueModal />{/if}
-                {#if panel.id === 'uploads'}<UploadsModal />{/if}
-                {#if panel.id === 'results'}
-                    <ResultsTable results={searchResults.results} resultCount={searchResults.num_results} />
-                {/if}
+        {#if currentArtist}
+            <div class="card card-fill">
+                <ArtistPage artist={currentArtist} onBack={() => currentArtist = null} onAlbumClick={navigateToAlbum} />
             </div>
-            {#if i < panels.length - 1}
-                <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-                <hr
-                    class="drag-handle"
-                    class:active={activeDrag?.topId === panel.id}
-                    aria-label="Resize panels"
-                    on:mousedown={(e) => startDrag(e, panel.id, panels[i + 1].id)}
-                />
-            {/if}
-        {/each}
+        {:else if currentAlbum}
+            <div class="card card-fill">
+                <AlbumPage album={currentAlbum} onBack={() => currentAlbum = null} onArtistClick={navigateToArtist} />
+            </div>
+        {:else}
+            <SearchBar onSearch={handleSearch} />
+            {#each panels as panel, i}
+                <div
+                    class="card"
+                    class:card-fill={panel.id === 'results' && heights[panel.id] == null}
+                    data-panel={panel.id}
+                    style={heights[panel.id] != null
+                        ? `height: ${heights[panel.id]}px`
+                        : panel.id !== 'results' ? `height: ${panel.defaultH}px` : ''}
+                >
+                    {#if panel.id === 'addMusic'}<AddMusicModal />{/if}
+                    {#if panel.id === 'queue'}<QueueModal />{/if}
+                    {#if panel.id === 'uploads'}<UploadsModal />{/if}
+                    {#if panel.id === 'results'}
+                        <ResultsTable results={searchResults.results} resultCount={searchResults.num_results} onAlbumClick={navigateToAlbum} onArtistClick={navigateToArtist} />
+                    {/if}
+                </div>
+                {#if i < panels.length - 1}
+                    <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+                    <hr
+                        class="drag-handle"
+                        class:active={activeDrag?.topId === panel.id}
+                        aria-label="Resize panels"
+                        on:mousedown={(e) => startDrag(e, panel.id, panels[i + 1].id)}
+                    />
+                {/if}
+            {/each}
+        {/if}
     </div>
 </div>
-<Player onQueue={() => (queueOpen = !queueOpen)} {queueOpen} />
+<Player onQueue={() => (queueOpen = !queueOpen)} {queueOpen} onArtistClick={navigateToArtist} />
 
 <style>
     .page {

@@ -4,6 +4,8 @@
 
     export let results = [];
     export let resultCount = 0;
+    export let onAlbumClick = null;
+    export let onArtistClick = null;
 
     let rows = [];
     $: rows = results.map(r => ({ ...r }));
@@ -51,9 +53,23 @@
                             <div class="preview-img preview-placeholder"></div>
                         {/if}
                     </td>
-                    <td class="result-artist">{row.artists}</td>
+                    <td class="result-artist">
+                      {#each row.artists as artist, ai}
+                        {#if onArtistClick}
+                          <button class="album-link" on:click={(e) => { e.stopPropagation(); onArtistClick(artist.uri); }}>{artist.name}</button>
+                        {:else}
+                          {artist.name}
+                        {/if}{#if ai < row.artists.length - 1}, {/if}
+                      {/each}
+                    </td>
                     <td class="result-title">{row.title}</td>
-                    <td class="result-album">{row.album}</td>
+                    <td class="result-album">
+                        {#if onAlbumClick && row.album_uri}
+                            <button class="album-link" on:click={(e) => { e.stopPropagation(); onAlbumClick(row.album_uri); }}>{row.album}</button>
+                        {:else}
+                            {row.album}
+                        {/if}
+                    </td>
                     <td>{row.added_by}</td>
                     <td class="button-col">
                         <button on:click={(e) => handleQueue(e, row)}>queue</button>
@@ -136,4 +152,18 @@
         width: 36px;
     }
     .button-col button:hover { background: #555; }
+    .album-link {
+        background: none;
+        border: none;
+        padding: 0;
+        font-size: inherit;
+        color: inherit;
+        cursor: pointer;
+        text-decoration: underline;
+        text-decoration-color: transparent;
+        transition: text-decoration-color 0.15s;
+    }
+    .album-link:hover {
+        text-decoration-color: currentColor;
+    }
 </style>

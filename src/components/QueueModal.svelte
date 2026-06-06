@@ -96,7 +96,7 @@
                             <div class="preview-img preview-placeholder"></div>
                         {/if}
                     </td>
-                    <td class="result-artist">{row.artists}</td>
+                    <td class="result-artist">{(row.artists ?? []).map(a => a.name).join(', ')}</td>
                     <td class="result-title">{row.title}</td>
                     <td class="result-album">{row.album}</td>
                     <td class="button-col">

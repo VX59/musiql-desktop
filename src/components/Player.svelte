@@ -10,6 +10,7 @@
 
     export let onQueue = () => {};
     export let queueOpen = false;
+    export let onArtistClick = () => {};
 
     let audioEl;
     let paused = true;
@@ -89,7 +90,11 @@
         {/if}
         <div class="track-info">
             <div class="title">{$currentTrack?.title ?? ''}</div>
-            <div class="artist">{$currentTrack?.artists ?? ''}</div>
+            <div class="artist">
+                {#each ($currentTrack?.artists ?? []) as artist, i}
+                    <button class="artist-link" on:click={() => onArtistClick(artist.uri)}>{artist.name}</button>{#if i < ($currentTrack?.artists ?? []).length - 1}, {/if}
+                {/each}
+            </div>
         </div>
         {#if $currentTrack}
             <div class="more-wrapper">
@@ -200,6 +205,15 @@
         overflow: hidden;
         text-overflow: ellipsis;
     }
+    .artist-link {
+        background: none;
+        border: none;
+        padding: 0;
+        font-size: 12px;
+        color: #666;
+        cursor: pointer;
+    }
+    .artist-link:hover { text-decoration: underline; color: #333; }
 
     .more-wrapper {
         position: relative;
