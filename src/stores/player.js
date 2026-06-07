@@ -40,9 +40,16 @@ async function _loadAndPlay(record) {
     }
 }
 
-export async function playRecord(record) {
+export async function playRecord(record, contextTracks = null) {
     const current = get(currentTrack);
     if (current) playHistory.update(h => [...h, current]);
+    if (contextTracks && contextTracks.length > 0 && get(queue).length === 0) {
+        const idx = contextTracks.findIndex(t => t.uri === record.uri);
+        const remaining = idx >= 0 ? contextTracks.slice(idx + 1) : [];
+        if (remaining.length > 0) {
+            queue.set(remaining);
+        }
+    }
     await _loadAndPlay(record);
 }
 

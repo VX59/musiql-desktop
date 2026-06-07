@@ -45,7 +45,7 @@
         </thead>
         <tbody>
             {#each rows as row, i}
-                <tr class="tablulated-result" on:click={() => playRecord(row)}>
+                <tr class="tablulated-result" on:click={() => playRecord(row, rows)}>
                     <td class="col-img">
                         {#if row.preview_url}
                             <img class="preview-img" src={row.preview_url} alt="" />
