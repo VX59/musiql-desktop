@@ -111,6 +111,9 @@
                         <button on:click|stopPropagation={handleReportRerecord}>
                             Report for re-recording
                         </button>
+                        <button on:click|stopPropagation={() => { showSkips = !showSkips; menuOpen = false; }}>
+                            {showSkips ? 'Hide' : 'Show'} skip markers
+                        </button>
                     </div>
                 {/if}
             </div>
@@ -162,7 +165,6 @@
             </button>
         {/if}
         <button class="ctrl-btn" class:active={queueOpen} on:click={onQueue}>queue</button>
-        <button class="ctrl-btn" class:active={showSkips} on:click={() => showSkips = !showSkips}>skips</button>
     </div>
 </div>
 
@@ -347,6 +349,31 @@
         width: 80px;
         margin-left: 8px;
         flex-shrink: 0;
+        height: 16px;
+    }
+    .volume-slider::-webkit-slider-runnable-track {
+        height: 3px;
+        border-radius: 2px;
+        background: linear-gradient(to right, #555 var(--fill), #ccc var(--fill));
+    }
+    .volume-slider::-webkit-slider-thumb {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #333;
+        margin-top: -4.5px;
+    }
+    .volume-slider::-moz-range-track {
+        height: 3px;
+        border-radius: 2px;
+        background: linear-gradient(to right, #555 var(--fill), #ccc var(--fill));
+    }
+    .volume-slider::-moz-range-thumb {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #333;
+        border: none;
     }
 
     .time {
