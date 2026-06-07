@@ -31,8 +31,8 @@
     <div class="album-header">
         <button class="back-btn" on:click={onBack}>← Back</button>
         <div class="album-meta">
-            {#if album.preview_url}
-                <img class="album-art" src={album.preview_url} alt="" />
+            {#if album.cover_url}
+                <img class="album-art" src={album.cover_url} alt="" />
             {:else}
                 <div class="album-art album-art-placeholder"></div>
             {/if}
@@ -65,8 +65,8 @@
                 {#each rows as row, i}
                     <tr class="track-row" on:click={() => playRecord(row, rows)}>
                         <td class="col-img">
-                            {#if row.preview_url}
-                                <img class="preview-img" src={row.preview_url} alt="" />
+                            {#if row.cover_url}
+                                <img class="preview-img" src={row.cover_url} alt="" />
                             {:else}
                                 <div class="preview-img preview-placeholder"></div>
                             {/if}

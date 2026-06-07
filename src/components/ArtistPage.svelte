@@ -14,10 +14,10 @@
         <div class="albums-grid">
             {#each artist.albums ?? [] as album}
                 <button class="album-card" on:click={() => onAlbumClick(album.uri)}>
-                    {#if album.cover_thumbnail_url}
+                    {#if album.cover_url}
                         <img
                             class="album-thumb"
-                            src={album.cover_thumbnail_url}
+                            src={album.cover_url}
                             alt={album.album_name}
                         />
                     {:else}
