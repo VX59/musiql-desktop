@@ -119,7 +119,7 @@
                         : panel.id !== 'results' ? `height: ${panel.defaultH}px` : ''}
                 >
                     {#if panel.id === 'addMusic'}<AddMusicModal />{/if}
-                    {#if panel.id === 'queue'}<QueueModal />{/if}
+                    {#if panel.id === 'queue'}<QueueModal onAlbumClick={navigateToAlbum} onArtistClick={navigateToArtist} />{/if}
                     {#if panel.id === 'uploads'}<UploadsModal />{/if}
                     {#if panel.id === 'results'}
                         <ResultsTable results={searchResults.results} resultCount={searchResults.num_results} onAlbumClick={navigateToAlbum} onArtistClick={navigateToArtist} />

@@ -47,6 +47,7 @@
                     {/if}{#if ai < album.artists.length - 1}, {/if}
                   {/each}
                 </div>
+                <div class="album-track-count">{rows.length} {rows.length === 1 ? 'track' : 'tracks'}</div>
             </div>
         </div>
     </div>
@@ -144,6 +145,10 @@
     .album-artists {
         font-size: 14px;
         color: #555;
+    }
+    .album-track-count {
+        font-size: 13px;
+        color: #888;
     }
     .tracks-scroll {
         flex: 1;

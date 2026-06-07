@@ -2,6 +2,9 @@
     import { queue, playRecord } from '../stores/player.js';
     import { addToLibrary, removeFromLibrary } from '../api/musiql.js';
 
+    export let onAlbumClick = null;
+    export let onArtistClick = null;
+
     let rows = [];
     $: rows = $queue.map(r => ({ ...r }));
 
@@ -96,9 +99,23 @@
                             <div class="preview-img preview-placeholder"></div>
                         {/if}
                     </td>
-                    <td class="result-artist">{(row.artists ?? []).map(a => a.name).join(', ')}</td>
+                    <td class="result-artist">
+                        {#each (row.artists ?? []) as artist, ai}
+                            {#if onArtistClick}
+                                <button class="album-link" on:click={(e) => { e.stopPropagation(); onArtistClick(artist.uri); }}>{artist.name}</button>
+                            {:else}
+                                {artist.name}
+                            {/if}{#if ai < (row.artists ?? []).length - 1}, {/if}
+                        {/each}
+                    </td>
                     <td class="result-title">{row.title}</td>
-                    <td class="result-album">{row.album}</td>
+                    <td class="result-album">
+                        {#if onAlbumClick && row.album_uri}
+                            <button class="album-link" on:click={(e) => { e.stopPropagation(); onAlbumClick(row.album_uri); }}>{row.album}</button>
+                        {:else}
+                            {row.album}
+                        {/if}
+                    </td>
                     <td class="button-col">
                         <div class="btn-left">
                             <button on:click={(e) => handleRemove(e, i)}>remove</button>
@@ -202,4 +219,18 @@
         width: 36px;
     }
     .btn-left button:hover { background: #555; }
+    .album-link {
+        background: none;
+        border: none;
+        padding: 0;
+        font-size: inherit;
+        color: inherit;
+        cursor: pointer;
+        text-decoration: underline;
+        text-decoration-color: transparent;
+        transition: text-decoration-color 0.15s;
+    }
+    .album-link:hover {
+        text-decoration-color: currentColor;
+    }
 </style>
