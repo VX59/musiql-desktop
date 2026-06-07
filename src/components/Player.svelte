@@ -343,15 +343,65 @@
         align-items: center;
     }
     .progress-container .slider { flex: 1; width: 100%; }
+
+    /* LCD screen style — progress bar only */
+    .progress-container .slider::-webkit-slider-runnable-track {
+        height: 20px;
+        border-radius: 2px;
+        background:
+            repeating-linear-gradient(
+                to right,
+                rgba(0,0,0,0.22) 0px, rgba(0,0,0,0.22) 1px,
+                transparent 1px, transparent 6px
+            ),
+            linear-gradient(to right, #8bac0f var(--fill), #0f380f var(--fill));
+        box-shadow:
+            inset 0 0 0 1px rgba(0,0,0,0.6),
+            inset 0 1px 3px rgba(0,0,0,0.4),
+            0 0 8px rgba(139,172,15,0.15);
+    }
+    .progress-container .slider::-webkit-slider-thumb {
+        width: 3px;
+        height: 26px;
+        border-radius: 1px;
+        margin-top: -3px;
+        background: rgba(255, 255, 220, 0.95);
+        box-shadow: 0 0 5px rgba(255,255,200,0.7);
+    }
+    .progress-container .slider::-moz-range-track {
+        height: 20px;
+        border-radius: 2px;
+        background:
+            repeating-linear-gradient(
+                to right,
+                rgba(0,0,0,0.22) 0px, rgba(0,0,0,0.22) 1px,
+                transparent 1px, transparent 6px
+            ),
+            linear-gradient(to right, #8bac0f var(--fill), #0f380f var(--fill));
+        box-shadow:
+            inset 0 0 0 1px rgba(0,0,0,0.6),
+            inset 0 1px 3px rgba(0,0,0,0.4);
+    }
+    .progress-container .slider::-moz-range-thumb {
+        width: 3px;
+        height: 26px;
+        border-radius: 1px;
+        border: none;
+        background: rgba(255, 255, 220, 0.95);
+        box-shadow: 0 0 5px rgba(255,255,200,0.7);
+    }
+
     .skip-marker {
         position: absolute;
         top: 50%;
         transform: translateY(-50%);
         width: 2px;
         height: 18px;
-        background: rgba(220, 60, 60, 0.7);
+        background: rgba(255, 255, 200, 0.9);
+        box-shadow: 0 0 3px rgba(255,255,150,0.8);
         pointer-events: none;
         border-radius: 1px;
+        z-index: 1;
     }
     .volume-slider {
         width: 80px;
