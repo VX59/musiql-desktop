@@ -144,3 +144,11 @@ export async function getArtist(artistUri) {
     if (!res.ok) { handleUnauthorized(res); throw new Error(res.status); }
     return res.json();
 }
+
+export async function getSkips(uri) {
+    const res = await fetch(`${config.MUSIQL_API_URL}/skips/${uri}`, {
+        headers: headers(),
+    });
+    if (!res.ok) { handleUnauthorized(res); throw new Error(res.status); }
+    return res.json();
+}

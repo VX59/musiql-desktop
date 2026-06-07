@@ -6,7 +6,7 @@
         playNextFromQueue,
         playPrevious,
     } from '../stores/player.js';
-    import { addToLibrary, removeFromLibrary, reportRecording } from '../api/musiql.js';
+    import { addToLibrary, removeFromLibrary, reportRecording, getSkips } from '../api/musiql.js';
 
     export let onQueue = () => {};
     export let queueOpen = false;
@@ -18,9 +18,16 @@
     let duration = 0;
     let volume = 1;
     let menuOpen = false;
+    let skips = [];
+    let showSkips = true;
 
     $: progress = duration > 0 ? (currentTime / duration) * 100 : 0;
     $: volumeFill = volume * 100;
+    $: if ($currentTrack?.uri) {
+        getSkips($currentTrack.uri).then(r => { skips = r.skips; }).catch(() => { skips = []; });
+    } else {
+        skips = [];
+    }
 
     function formatTime(s) {
         if (!s || isNaN(s)) return '0:00';
@@ -115,16 +122,23 @@
             {paused ? 'play' : 'pause'}
         </button>
         <div class="progress-wrap">
-            <input
-                class="slider"
-                style="--fill: {progress}%"
-                type="range"
-                min="0"
-                max={duration || 100}
-                step="0.1"
-                value={currentTime}
-                on:input={seek}
-            />
+            <div class="progress-container">
+                <input
+                    class="slider"
+                    style="--fill: {progress}%"
+                    type="range"
+                    min="0"
+                    max={duration || 100}
+                    step="0.1"
+                    value={currentTime}
+                    on:input={seek}
+                />
+                {#if showSkips}
+                    {#each skips as s}
+                        <div class="skip-marker" style="left: {s * 100}%"></div>
+                    {/each}
+                {/if}
+            </div>
             <span class="time">{formatTime(currentTime)} / {formatTime(duration)}</span>
         </div>
     </div>
@@ -148,6 +162,7 @@
             </button>
         {/if}
         <button class="ctrl-btn" class:active={queueOpen} on:click={onQueue}>queue</button>
+        <button class="ctrl-btn" class:active={showSkips} on:click={() => showSkips = !showSkips}>skips</button>
     </div>
 </div>
 
@@ -311,7 +326,23 @@
     }
 
     /* progress bar stretches, volume is fixed width */
-    .progress-wrap .slider { flex: 1; }
+    .progress-container {
+        position: relative;
+        flex: 1;
+        display: flex;
+        align-items: center;
+    }
+    .progress-container .slider { flex: 1; width: 100%; }
+    .skip-marker {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 2px;
+        height: 18px;
+        background: rgba(220, 60, 60, 0.7);
+        pointer-events: none;
+        border-radius: 1px;
+    }
     .volume-slider {
         width: 80px;
         margin-left: 8px;
