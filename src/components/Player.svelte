@@ -135,7 +135,7 @@
                 />
                 {#if showSkips}
                     {#each skips as s}
-                        <div class="skip-marker" style="left: {s * 100}%"></div>
+                        <div class="skip-marker" style="left: calc(2px + {s} * (100% - 4px))"></div>
                     {/each}
                 {/if}
             </div>
