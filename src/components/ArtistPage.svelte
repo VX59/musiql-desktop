@@ -1,12 +1,10 @@
 <script>
     export let artist;
-    export let onBack;
     export let onAlbumClick;
 </script>
 
 <div class="artist-page">
     <div class="artist-header">
-        <button class="back-btn" on:click={onBack}>← Back</button>
         <h2 class="artist-name">{artist.artist_name}</h2>
     </div>
 
@@ -39,18 +37,6 @@
     .artist-header {
         padding: 12px 0 0 0;
         flex-shrink: 0;
-    }
-    .back-btn {
-        background: none;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        padding: 6px 12px;
-        cursor: pointer;
-        font-size: 14px;
-        margin-bottom: 16px;
-    }
-    .back-btn:hover {
-        background: #f0f0f0;
     }
     .artist-name {
         margin: 0;

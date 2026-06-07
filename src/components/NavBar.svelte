@@ -41,15 +41,30 @@
     }
     .nav-buttons button {
         padding: 8px 14px;
-        border: none;
+        border: 1px solid #111;
         border-radius: 2px;
         cursor: pointer;
-        background: #333;
+        background: linear-gradient(to bottom, #4a4a4a 0%, #252525 100%);
         color: white;
         font-size: 14px;
+        box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.10),
+            0 2px 4px rgba(0,0,0,0.45),
+            0 1px 0 rgba(255,255,255,0.08);
+        text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+        transition: background 0.1s, box-shadow 0.1s;
     }
-    .nav-buttons button:hover { background: #555; }
-    .nav-buttons button.active { background: #555; }
+    .nav-buttons button:hover {
+        background: linear-gradient(to bottom, #5a5a5a 0%, #333 100%);
+        box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.13),
+            0 3px 6px rgba(0,0,0,0.5),
+            0 1px 0 rgba(255,255,255,0.08);
+    }
+    .nav-buttons button.active {
+        background: linear-gradient(to bottom, #1e1e1e 0%, #3a3a3a 100%);
+        box-shadow: inset 0 2px 5px rgba(0,0,0,0.55), 0 1px 0 rgba(255,255,255,0.06);
+    }
     .logout { margin-left: auto; }
     .brand {
         font-size: 16px;
@@ -60,13 +75,20 @@
     }
     .brand-badge {
         display: inline-block;
-        background: #efefed;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.14);
+        background: linear-gradient(to bottom, #f8f8f6 0%, #e0e0de 100%);
+        border: 1px solid rgba(0,0,0,0.18);
+        box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.95),
+            inset 0 -1px 0 rgba(0,0,0,0.08),
+            0 2px 4px rgba(0,0,0,0.22),
+            0 5px 14px rgba(0,0,0,0.12),
+            0 1px 0 rgba(255,255,255,0.45);
         color: #111;
         font-size: 16px;
         font-weight: 700;
         letter-spacing: 0.08em;
         padding: 8px 10px;
         border-radius: 4px;
+        text-shadow: 0 1px 0 rgba(255,255,255,0.7);
     }
 </style>

@@ -108,8 +108,13 @@
         cursor: pointer;
     }
     .tablulated-result:hover {
-        background: #efefed;
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+        background: #e9e9e7;
+    }
+    .tablulated-result:hover td {
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.08), 1px 0 0 rgba(0,0,0,0.09);
+    }
+    .tablulated-result:hover td:last-child {
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.08);
     }
     .tablulated-result td {
         padding: 6px 8px;
@@ -141,17 +146,34 @@
     .button-col button {
         width: 70px;
         padding: 6px 10px;
-        border: none;
+        border: 1px solid #111;
         border-radius: 2px;
         cursor: pointer;
-        background: #333;
+        background: linear-gradient(to bottom, #4a4a4a 0%, #252525 100%);
         color: white;
         font-size: 13px;
+        box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.10),
+            0 2px 4px rgba(0,0,0,0.45),
+            0 1px 0 rgba(255,255,255,0.08);
+        text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+        transition: background 0.1s, box-shadow 0.1s;
     }
     .button-col button.library-btn {
         width: 36px;
     }
-    .button-col button:hover { background: #555; }
+    .button-col button:hover {
+        background: linear-gradient(to bottom, #5a5a5a 0%, #333 100%);
+        box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.13),
+            0 3px 6px rgba(0,0,0,0.5),
+            0 1px 0 rgba(255,255,255,0.08);
+    }
+    .button-col button:active {
+        background: linear-gradient(to bottom, #1e1e1e 0%, #3a3a3a 100%);
+        box-shadow: inset 0 2px 5px rgba(0,0,0,0.55), 0 1px 0 rgba(255,255,255,0.06);
+        transform: translateY(1px);
+    }
     .album-link {
         background: none;
         border: none;

@@ -342,11 +342,11 @@
         display: flex;
         align-items: center;
     }
-    .progress-container .slider { flex: 1; width: 100%; }
+    .progress-container .slider { flex: 1; width: 100%; height: 38px; }
 
     /* LCD screen style — progress bar only */
     .progress-container .slider::-webkit-slider-runnable-track {
-        height: 20px;
+        height: 30px;
         border-radius: 2px;
         background:
             repeating-linear-gradient(
@@ -361,14 +361,14 @@
     }
     .progress-container .slider::-webkit-slider-thumb {
         width: 3px;
-        height: 26px;
+        height: 36px;
         border-radius: 1px;
         margin-top: -3px;
         background: rgba(255, 255, 220, 0.95);
         box-shadow: 0 0 5px rgba(255,255,200,0.7);
     }
     .progress-container .slider::-moz-range-track {
-        height: 20px;
+        height: 30px;
         border-radius: 2px;
         background:
             repeating-linear-gradient(
@@ -383,7 +383,7 @@
     }
     .progress-container .slider::-moz-range-thumb {
         width: 3px;
-        height: 26px;
+        height: 36px;
         border-radius: 1px;
         border: none;
         background: rgba(255, 255, 220, 0.95);
@@ -395,7 +395,7 @@
         top: 50%;
         transform: translateY(-50%);
         width: 2px;
-        height: 18px;
+        height: 28px;
         background: rgba(255, 255, 200, 0.9);
         box-shadow: 0 0 3px rgba(255,255,150,0.8);
         pointer-events: none;
@@ -425,16 +425,38 @@
     .ctrl-btn {
         height: 30px;
         padding: 0 12px;
-        border: none;
-        border-radius: 2px;
+        border: 1px solid #111;
+        border-radius: 3px;
         cursor: pointer;
-        background: #333;
+        background: linear-gradient(to bottom, #4a4a4a 0%, #252525 100%);
         color: white;
         font-size: 14px;
         line-height: 1;
+        box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.10),
+            0 2px 4px rgba(0,0,0,0.45),
+            0 1px 0 rgba(255,255,255,0.08);
+        text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+        transition: background 0.1s, box-shadow 0.1s;
     }
-    .ctrl-btn:hover { background: #555; }
-    .ctrl-btn.active { background: #555; }
+    .ctrl-btn:hover {
+        background: linear-gradient(to bottom, #5a5a5a 0%, #333 100%);
+        box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.13),
+            0 3px 6px rgba(0,0,0,0.5),
+            0 1px 0 rgba(255,255,255,0.08);
+    }
+    .ctrl-btn:active {
+        background: linear-gradient(to bottom, #1e1e1e 0%, #3a3a3a 100%);
+        box-shadow:
+            inset 0 2px 5px rgba(0,0,0,0.55),
+            0 1px 0 rgba(255,255,255,0.06);
+        transform: translateY(1px);
+    }
+    .ctrl-btn.active {
+        background: linear-gradient(to bottom, #1e1e1e 0%, #3a3a3a 100%);
+        box-shadow: inset 0 2px 5px rgba(0,0,0,0.55), 0 1px 0 rgba(255,255,255,0.06);
+    }
     .ctrl-btn.library-btn {
         width: 36px;
         padding: 0;

@@ -39,7 +39,7 @@
         uploadsOpen   && { id: 'uploads',  defaultH: 280 },
         addMusicOpen  && { id: 'addMusic', defaultH: 280 },
         queueOpen     && { id: 'queue',    defaultH: 280 },
-        searchResults && { id: 'results',  defaultH: 320 },
+        { id: 'library', defaultH: 320 },
     ].filter(Boolean);
 
     function startDrag(e, topId, bottomId) {
@@ -67,11 +67,15 @@
     function stopDrag() { activeDrag = null; }
 
     // Reset stored heights for panels that close so they get defaults when reopened
-    $: if (!addMusicOpen) { const { addMusic, results, ...rest } = heights; heights = rest; }
-    $: if (!queueOpen)    { const { queue,    results, ...rest } = heights; heights = rest; }
-    $: if (!uploadsOpen)  { const { uploads,  results, ...rest } = heights; heights = rest; }
+    $: if (!addMusicOpen) { const { addMusic, ...rest } = heights; heights = rest; }
+    $: if (!queueOpen)    { const { queue,    ...rest } = heights; heights = rest; }
+    $: if (!uploadsOpen)  { const { uploads,  ...rest } = heights; heights = rest; }
+    // When library is the only open panel, let it fill the page
+    $: if (!addMusicOpen && !queueOpen && !uploadsOpen) { const { library: _l, ...rest } = heights; heights = rest; }
 
     async function loadLibrary() {
+        currentArtist = null;
+        currentAlbum = null;
         searchResults = await searchAdvanced('@library', 0, 0);
     }
 
@@ -91,9 +95,9 @@
 <div class="page">
     <NavBar
         onLibrary={loadLibrary}
-        onQueue={() => (queueOpen = !queueOpen)}
-        onAddMusic={() => (addMusicOpen = !addMusicOpen)}
-        onUploads={() => (uploadsOpen = !uploadsOpen)}
+        onQueue={() => { if (!queueOpen) { currentArtist = null; currentAlbum = null; } queueOpen = !queueOpen; }}
+        onAddMusic={() => { if (!addMusicOpen) { currentArtist = null; currentAlbum = null; } addMusicOpen = !addMusicOpen; }}
+        onUploads={() => { if (!uploadsOpen) { currentArtist = null; currentAlbum = null; } uploadsOpen = !uploadsOpen; }}
         {queueOpen}
         {addMusicOpen}
         {uploadsOpen}
@@ -108,21 +112,23 @@
                 <AlbumPage album={currentAlbum} onBack={() => currentAlbum = null} onArtistClick={navigateToArtist} />
             </div>
         {:else}
-            <SearchBar onSearch={handleSearch} />
             {#each panels as panel, i}
                 <div
                     class="card"
-                    class:card-fill={panel.id === 'results' && heights[panel.id] == null}
+                    class:card-fill={panel.id === 'library' && heights[panel.id] == null}
                     data-panel={panel.id}
                     style={heights[panel.id] != null
                         ? `height: ${heights[panel.id]}px`
-                        : panel.id !== 'results' ? `height: ${panel.defaultH}px` : ''}
+                        : panel.id !== 'library' ? `height: ${panel.defaultH}px` : ''}
                 >
                     {#if panel.id === 'addMusic'}<AddMusicModal />{/if}
                     {#if panel.id === 'queue'}<QueueModal onAlbumClick={navigateToAlbum} onArtistClick={navigateToArtist} />{/if}
                     {#if panel.id === 'uploads'}<UploadsModal />{/if}
-                    {#if panel.id === 'results'}
-                        <ResultsTable results={searchResults.results} resultCount={searchResults.num_results} onAlbumClick={navigateToAlbum} onArtistClick={navigateToArtist} />
+                    {#if panel.id === 'library'}
+                        <SearchBar onSearch={handleSearch} />
+                        {#if searchResults}
+                            <ResultsTable results={searchResults.results} resultCount={searchResults.num_results} onAlbumClick={navigateToAlbum} onArtistClick={navigateToArtist} />
+                        {/if}
                     {/if}
                 </div>
                 {#if i < panels.length - 1}
@@ -152,7 +158,7 @@
         flex-direction: column;
         padding: 16px 16px 0 16px;
         min-height: 0;
-        overflow: hidden;
+        overflow-y: auto;
     }
     .card {
         flex-shrink: 0;
@@ -164,7 +170,7 @@
         overflow-x: hidden;
     }
     .card-fill {
-        flex: 1;
+        flex: 1 0 320px;
         min-height: 200px;
     }
     hr.drag-handle {

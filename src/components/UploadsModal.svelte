@@ -115,7 +115,13 @@
         padding: 6px 8px;
         vertical-align: middle;
     }
-    .tablulated-result:hover { background: #efefed; }
+    .tablulated-result:hover { background: #e9e9e7; }
+    .tablulated-result:hover td {
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.08), 1px 0 0 rgba(0,0,0,0.09);
+    }
+    .tablulated-result:hover td:last-child {
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.08);
+    }
     .col-title { width: 20%; }
     .col-date {
         white-space: nowrap;

@@ -3,7 +3,6 @@
     import { addToLibrary, removeFromLibrary } from '../api/musiql.js';
 
     export let album;
-    export let onBack;
     export let onArtistClick = null;
 
     let rows = [];
@@ -29,7 +28,6 @@
 
 <div class="album-page">
     <div class="album-header">
-        <button class="back-btn" on:click={onBack}>← Back</button>
         <div class="album-meta">
             {#if album.cover_url}
                 <img class="album-art" src={album.cover_url} alt="" />
@@ -104,18 +102,6 @@
     .album-header {
         padding: 12px 0 16px 0;
         flex-shrink: 0;
-    }
-    .back-btn {
-        background: none;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        padding: 6px 12px;
-        cursor: pointer;
-        font-size: 14px;
-        margin-bottom: 16px;
-    }
-    .back-btn:hover {
-        background: #f0f0f0;
     }
     .album-meta {
         display: flex;
