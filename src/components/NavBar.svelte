@@ -60,13 +60,15 @@
     }
     .brand-badge {
         display: inline-block;
-        background: #efefed;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.14);
-        color: #111;
+        background: linear-gradient(to bottom, #d0d0d0 0%, #efefef 35%, #ffffff 50%, #e8e8e8 70%, #b8b8b8 100%);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -1px 0 rgba(0,0,0,0.15);
+        color: #444;
+        text-shadow: 0 1px 0 rgba(255,255,255,0.85), 0 -1px 0 rgba(0,0,0,0.18);
         font-size: 16px;
-        font-weight: 700;
+        font-weight: 900;
         letter-spacing: 0.08em;
         padding: 8px 10px;
         border-radius: 4px;
+        border: 1px solid #999;
     }
 </style>
