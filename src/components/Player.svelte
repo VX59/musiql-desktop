@@ -354,11 +354,10 @@
                 rgba(0,0,0,0.22) 0px, rgba(0,0,0,0.22) 1px,
                 transparent 1px, transparent 6px
             ),
-            linear-gradient(to right, #8bac0f var(--fill), #0f380f var(--fill));
+            linear-gradient(to right, #aaaaaa var(--fill), #1c1c1c var(--fill));
         box-shadow:
             inset 0 0 0 1px rgba(0,0,0,0.6),
-            inset 0 1px 3px rgba(0,0,0,0.4),
-            0 0 8px rgba(139,172,15,0.15);
+            inset 0 1px 3px rgba(0,0,0,0.4);
     }
     .progress-container .slider::-webkit-slider-thumb {
         width: 3px;
@@ -377,7 +376,7 @@
                 rgba(0,0,0,0.22) 0px, rgba(0,0,0,0.22) 1px,
                 transparent 1px, transparent 6px
             ),
-            linear-gradient(to right, #8bac0f var(--fill), #0f380f var(--fill));
+            linear-gradient(to right, #aaaaaa var(--fill), #1c1c1c var(--fill));
         box-shadow:
             inset 0 0 0 1px rgba(0,0,0,0.6),
             inset 0 1px 3px rgba(0,0,0,0.4);
