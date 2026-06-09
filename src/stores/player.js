@@ -17,6 +17,9 @@ export function registerAudioElement(el) {
 
 export function getProgress() {
     if (!audioEl || get(currentHistId) === 0) return 1.0;
+    const track = get(currentTrack);
+    const durMs = track?.duration_ms;
+    if (durMs > 0) return Math.min(audioEl.currentTime / (durMs / 1000), 1.0);
     const dur = audioEl.duration;
     return dur > 0 ? audioEl.currentTime / dur : 1.0;
 }
