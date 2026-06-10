@@ -121,33 +121,27 @@
             </div>
         {:else if !libraryOpen}
             <div class="player-view">
-                <FullscreenPlayer />
-                {#if uploadsOpen || addMusicOpen || queueOpen}
-                    <div class="overlay-panels">
-                        {#each panels as panel, i}
-                            <div
-                                class="card"
-                                data-panel={panel.id}
-                                style={heights[panel.id] != null
-                                    ? `height: ${heights[panel.id]}px`
-                                    : `height: ${panel.defaultH}px`}
-                            >
-                                {#if panel.id === 'addMusic'}<AddMusicModal />{/if}
-                                {#if panel.id === 'queue'}<QueueModal onAlbumClick={navigateToAlbum} onArtistClick={navigateToArtist} />{/if}
-                                {#if panel.id === 'uploads'}<UploadsModal />{/if}
-                            </div>
-                            {#if i < panels.length - 1}
-                                <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-                                <hr
-                                    class="drag-handle"
-                                    class:active={activeDrag?.topId === panel.id}
-                                    aria-label="Resize panels"
-                                    on:mousedown={(e) => startDrag(e, panel.id, panels[i + 1].id)}
-                                />
-                            {/if}
-                        {/each}
+                {#each panels as panel, i}
+                    <div
+                        class="card"
+                        data-panel={panel.id}
+                        style={heights[panel.id] != null
+                            ? `height: ${heights[panel.id]}px`
+                            : `height: ${panel.defaultH}px`}
+                    >
+                        {#if panel.id === 'addMusic'}<AddMusicModal />{/if}
+                        {#if panel.id === 'queue'}<QueueModal onAlbumClick={navigateToAlbum} onArtistClick={navigateToArtist} />{/if}
+                        {#if panel.id === 'uploads'}<UploadsModal />{/if}
                     </div>
-                {/if}
+                    <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+                    <hr
+                        class="drag-handle"
+                        class:active={activeDrag?.topId === panel.id}
+                        aria-label="Resize panels"
+                        on:mousedown={(e) => startDrag(e, panel.id, panels[i + 1].id)}
+                    />
+                {/each}
+                <FullscreenPlayer />
             </div>
         {:else}
             {#each panels as panel, i}
@@ -226,22 +220,9 @@
         background: #bbb;
     }
     .player-view {
-        position: relative;
         flex: 1;
         display: flex;
         flex-direction: column;
-        overflow: hidden;
         min-height: 0;
-    }
-    .overlay-panels {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 10;
-        background: #1a1a1a;
-        max-height: 65%;
-        overflow-y: auto;
-        border-bottom: 1px solid #333;
     }
 </style>
