@@ -5,6 +5,7 @@
     export let onQueue = () => {};
     export let onAddMusic = () => {};
     export let onUploads = () => {};
+    export let libraryOpen = false;
     export let queueOpen = false;
     export let addMusicOpen = false;
     export let uploadsOpen = false;
@@ -20,7 +21,7 @@
 
 <div class="nav-buttons">
     <span class="brand"><span class="brand-badge">MUSIQL</span></span>
-    <button on:click={onLibrary}>library</button>
+    <button class:active={libraryOpen} on:click={onLibrary}>library</button>
     <button class:active={queueOpen} on:click={onQueue}>queue</button>
     <button class:active={addMusicOpen} on:click={onAddMusic}>add music</button>
     <button class:active={uploadsOpen} on:click={onUploads}>uploads</button>
