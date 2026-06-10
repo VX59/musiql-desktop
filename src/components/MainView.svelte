@@ -12,6 +12,7 @@
     import Player from './Player.svelte';
     import AlbumPage from './AlbumPage.svelte';
     import ArtistPage from './ArtistPage.svelte';
+    import FullscreenPlayer from './FullscreenPlayer.svelte';
 
     let searchResults = null;
     let currentAlbum = null;
@@ -29,6 +30,7 @@
     let queueOpen = false;
     let addMusicOpen = false;
     let uploadsOpen = false;
+    let libraryOpen = true;
     let containerEl;
 
     // heights[id] = explicit px height; null = use default min-height
@@ -39,8 +41,12 @@
         uploadsOpen   && { id: 'uploads',  defaultH: 280 },
         addMusicOpen  && { id: 'addMusic', defaultH: 280 },
         queueOpen     && { id: 'queue',    defaultH: 280 },
-        { id: 'library', defaultH: 320 },
+        libraryOpen   && { id: 'library',  defaultH: 320 },
     ].filter(Boolean);
+
+    function toggleLibrary() {
+        libraryOpen = !libraryOpen;
+    }
 
     function startDrag(e, topId, bottomId) {
         e.preventDefault();
@@ -70,6 +76,7 @@
     $: if (!addMusicOpen) { const { addMusic, ...rest } = heights; heights = rest; }
     $: if (!queueOpen)    { const { queue,    ...rest } = heights; heights = rest; }
     $: if (!uploadsOpen)  { const { uploads,  ...rest } = heights; heights = rest; }
+    $: if (!libraryOpen) { const { library: _l, ...rest } = heights; heights = rest; }
     // When library is the only open panel, let it fill the page
     $: if (!addMusicOpen && !queueOpen && !uploadsOpen) { const { library: _l, ...rest } = heights; heights = rest; }
 
@@ -94,10 +101,11 @@
 
 <div class="page">
     <NavBar
-        onLibrary={loadLibrary}
+        onLibrary={toggleLibrary}
         onQueue={() => { if (!queueOpen) { currentArtist = null; currentAlbum = null; } queueOpen = !queueOpen; }}
         onAddMusic={() => { if (!addMusicOpen) { currentArtist = null; currentAlbum = null; } addMusicOpen = !addMusicOpen; }}
         onUploads={() => { if (!uploadsOpen) { currentArtist = null; currentAlbum = null; } uploadsOpen = !uploadsOpen; }}
+        {libraryOpen}
         {queueOpen}
         {addMusicOpen}
         {uploadsOpen}
@@ -110,6 +118,36 @@
         {:else if currentAlbum}
             <div class="card card-fill">
                 <AlbumPage album={currentAlbum} onBack={() => currentAlbum = null} onArtistClick={navigateToArtist} />
+            </div>
+        {:else if !libraryOpen}
+            <div class="player-view">
+                <FullscreenPlayer />
+                {#if uploadsOpen || addMusicOpen || queueOpen}
+                    <div class="overlay-panels">
+                        {#each panels as panel, i}
+                            <div
+                                class="card"
+                                data-panel={panel.id}
+                                style={heights[panel.id] != null
+                                    ? `height: ${heights[panel.id]}px`
+                                    : `height: ${panel.defaultH}px`}
+                            >
+                                {#if panel.id === 'addMusic'}<AddMusicModal />{/if}
+                                {#if panel.id === 'queue'}<QueueModal onAlbumClick={navigateToAlbum} onArtistClick={navigateToArtist} />{/if}
+                                {#if panel.id === 'uploads'}<UploadsModal />{/if}
+                            </div>
+                            {#if i < panels.length - 1}
+                                <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+                                <hr
+                                    class="drag-handle"
+                                    class:active={activeDrag?.topId === panel.id}
+                                    aria-label="Resize panels"
+                                    on:mousedown={(e) => startDrag(e, panel.id, panels[i + 1].id)}
+                                />
+                            {/if}
+                        {/each}
+                    </div>
+                {/if}
             </div>
         {:else}
             {#each panels as panel, i}
@@ -186,5 +224,24 @@
     hr.drag-handle:hover, hr.drag-handle.active {
         height: 3px;
         background: #bbb;
+    }
+    .player-view {
+        position: relative;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        min-height: 0;
+    }
+    .overlay-panels {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 10;
+        background: #1a1a1a;
+        max-height: 65%;
+        overflow-y: auto;
+        border-bottom: 1px solid #333;
     }
 </style>

@@ -137,8 +137,6 @@
         margin-bottom: 8px;
     }
     .results-scroll {
-        max-height: 400px;
-        overflow-y: auto;
         margin-top: 8px;
     }
     .results-table {
