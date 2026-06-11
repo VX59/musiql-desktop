@@ -11,6 +11,7 @@
     export let onQueue = () => {};
     export let queueOpen = false;
     export let onArtistClick = () => {};
+    export let onAlbumClick = () => {};
 
     let audioEl;
     let paused = true;
@@ -96,7 +97,7 @@
             <div class="album-thumb thumb-placeholder"></div>
         {/if}
         <div class="track-info">
-            <div class="title">{$currentTrack?.title ?? ''}</div>
+            <button class="title-link" on:click={() => $currentTrack?.album_uri && onAlbumClick($currentTrack.album_uri)}>{$currentTrack?.title ?? ''}</button>
             <div class="artist">
                 {#each ($currentTrack?.artists ?? []) as artist, i}
                     <button class="artist-link" on:click={() => onArtistClick(artist.uri)}>{artist.name}</button>{#if i < ($currentTrack?.artists ?? []).length - 1}, {/if}
@@ -207,14 +208,22 @@
         min-width: 0;
         flex: 1;
     }
-    .title {
+    .title-link {
+        background: none;
+        border: none;
+        padding: 0;
         font-size: 14px;
         font-weight: 600;
         color: #111;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        cursor: pointer;
+        text-align: left;
+        width: 100%;
+        display: block;
     }
+    .title-link:hover { text-decoration: underline; }
     .artist {
         font-size: 12px;
         color: #666;

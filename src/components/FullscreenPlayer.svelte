@@ -1,5 +1,7 @@
 <script>
     import { currentTrack } from '../stores/player.js';
+    export let onArtistClick = () => {};
+    export let onAlbumClick = () => {};
 </script>
 
 {#if $currentTrack}
@@ -14,10 +16,10 @@
                     </div>
                 {/if}
             </div>
-            <div class="track-title">{$currentTrack.title ?? ''}</div>
+            <button class="track-title" on:click={() => $currentTrack?.album_uri && onAlbumClick($currentTrack.album_uri)}>{$currentTrack.title ?? ''}</button>
             <div class="track-artists">
                 {#each ($currentTrack.artists ?? []) as artist, i}
-                    <span class="artist-name">{artist.name}</span>{#if i < ($currentTrack.artists ?? []).length - 1}<span class="artist-sep">, </span>{/if}
+                    <button class="artist-name" on:click={() => onArtistClick(artist.uri)}>{artist.name}</button>{#if i < ($currentTrack.artists ?? []).length - 1}<span class="artist-sep">, </span>{/if}
                 {/each}
             </div>
         </div>
@@ -45,13 +47,13 @@
         align-items: center;
         gap: 16px;
         padding: 24px;
-        max-width: 400px;
+        max-width: 520px;
         width: 100%;
     }
 
     .album-art {
-        width: 200px;
-        height: 200px;
+        width: 400px;
+        height: 400px;
         flex-shrink: 0;
         border-radius: 4px;
         overflow: hidden;
@@ -82,13 +84,18 @@
     }
 
     .track-title {
+        background: none;
+        border: none;
+        padding: 0;
         font-size: 28px;
         font-weight: 600;
         color: #e9e9e7;
         text-align: center;
         line-height: 1.2;
         word-break: break-word;
+        cursor: pointer;
     }
+    .track-title:hover { text-decoration: underline; }
 
     .track-artists {
         font-size: 16px;
@@ -98,8 +105,14 @@
     }
 
     .artist-name {
+        background: none;
+        border: none;
+        padding: 0;
+        font-size: 16px;
         color: #888;
+        cursor: pointer;
     }
+    .artist-name:hover { text-decoration: underline; color: #aaa; }
 
     .artist-sep {
         color: #888;

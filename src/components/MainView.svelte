@@ -141,7 +141,7 @@
                         on:mousedown={(e) => startDrag(e, panel.id, panels[i + 1].id)}
                     />
                 {/each}
-                <FullscreenPlayer />
+                <FullscreenPlayer onArtistClick={navigateToArtist} onAlbumClick={navigateToAlbum} />
             </div>
         {:else}
             {#each panels as panel, i}
@@ -176,7 +176,7 @@
         {/if}
     </div>
 </div>
-<Player onQueue={() => (queueOpen = !queueOpen)} {queueOpen} onArtistClick={navigateToArtist} />
+<Player onQueue={() => (queueOpen = !queueOpen)} {queueOpen} onArtistClick={navigateToArtist} onAlbumClick={navigateToAlbum} />
 
 <style>
     .page {
