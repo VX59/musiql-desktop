@@ -21,9 +21,21 @@
     let menuOpen = false;
     let skips = [];
     let showSkips = true;
+    let playbackRate = 1;
+    let _lastResetUri = null;
+
+    $: {
+        const uri = $currentTrack?.uri ?? null;
+        if (uri && uri !== _lastResetUri) {
+            _lastResetUri = uri;
+            playbackRate = 1;
+            if (audioEl) audioEl.playbackRate = 1;
+        }
+    }
 
     $: progress = duration > 0 ? (currentTime / duration) * 100 : 0;
     $: volumeFill = volume * 100;
+    $: speedFill = ((playbackRate - 0.75) / 0.75) * 100;
     $: if ($currentTrack?.uri) {
         getSkips($currentTrack.uri).then(r => { skips = r.skips; }).catch(() => { skips = []; });
     } else {
@@ -48,7 +60,17 @@
         audioEl.volume = volume;
     }
 
-    function togglePlay() {
+    function setSpeed(e) {
+        playbackRate = parseFloat(e.target.value);
+        audioEl.playbackRate = playbackRate;
+    }
+
+    function resetSpeed() {
+        playbackRate = 1;
+        audioEl.playbackRate = 1;
+    }
+
+function togglePlay() {
         if (audioEl.paused) audioEl.play();
         else audioEl.pause();
     }
@@ -150,16 +172,42 @@
     <div class="nav-btns">
         <button class="ctrl-btn" on:click={playPrevious}>prev</button>
         <button class="ctrl-btn" on:click={playNextFromQueue}>next</button>
-        <input
-            class="slider volume-slider"
-            style="--fill: {volumeFill}%"
-            type="range"
-            min="0"
-            max="1"
-            step="0.01"
-            value={volume}
-            on:input={setVolume}
-        />
+        <div class="vol-wrap">
+            <div class="slider-track-wrap">
+                <input
+                    class="slider volume-slider"
+                    style="--fill: {volumeFill}%"
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={volume}
+                    on:input={setVolume}
+                />
+                <span class="track-glow">
+                    <span class="glow-label">vol</span>
+                    <span class="glow-value">{Math.round(volume * 100)}</span>
+                </span>
+            </div>
+        </div>
+        <div class="speed-wrap">
+            <div class="slider-track-wrap">
+                <input
+                    class="slider speed-slider"
+                    style="--fill: {speedFill}%"
+                    type="range"
+                    min="0.75"
+                    max="1.5"
+                    step="0.05"
+                    value={playbackRate}
+                    on:input={setSpeed}
+                />
+                <span class="track-glow">
+                    <span class="glow-label">spd</span>
+                    <span class="glow-value glow-reset" on:click={resetSpeed}>{playbackRate.toFixed(2)}</span>
+                </span>
+            </div>
+        </div>
         {#if $currentTrack}
             <button class="ctrl-btn library-btn" on:click={handleLibraryToggle}>
                 {$currentTrack.in_library ? '-' : '+'}
@@ -411,11 +459,99 @@
         border-radius: 1px;
         z-index: 1;
     }
-    .volume-slider {
-        width: 80px;
-        margin-left: 8px;
+    .vol-wrap, .speed-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
         flex-shrink: 0;
     }
+
+    .slider-track-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+        width: 80px;
+        overflow: hidden;
+    }
+
+    .volume-slider { width: 80px; }
+    .speed-slider  { width: 80px; }
+
+    /* dark semi-transparent screen — glow bleeds through */
+    .volume-slider, .speed-slider {
+        position: relative;
+        z-index: 2;
+    }
+    .volume-slider::-webkit-slider-runnable-track,
+    .speed-slider::-webkit-slider-runnable-track {
+        height: 20px;
+        border-radius: 2px;
+        background:
+            repeating-linear-gradient(
+                to right,
+                rgba(0,0,0,0.22) 0px, rgba(0,0,0,0.22) 1px,
+                transparent 1px, transparent 6px
+            ),
+            linear-gradient(to right, #aaaaaa var(--fill), #1c1c1c var(--fill));
+        box-shadow:
+            inset 0 0 0 1px rgba(0,0,0,0.6),
+            inset 0 1px 3px rgba(0,0,0,0.4);
+    }
+    .volume-slider::-moz-range-track,
+    .speed-slider::-moz-range-track {
+        height: 20px;
+        border-radius: 2px;
+        background:
+            repeating-linear-gradient(
+                to right,
+                rgba(0,0,0,0.22) 0px, rgba(0,0,0,0.22) 1px,
+                transparent 1px, transparent 6px
+            ),
+            linear-gradient(to right, #aaaaaa var(--fill), #1c1c1c var(--fill));
+        box-shadow:
+            inset 0 0 0 1px rgba(0,0,0,0.6),
+            inset 0 1px 3px rgba(0,0,0,0.4);
+    }
+
+    /* LCD overlay — sits on top of the dark screen */
+    .track-glow {
+        position: absolute;
+        left: 5px;
+        right: 5px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 3;
+        pointer-events: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: #fff;
+        text-shadow:
+            0 0 2px #fff,
+            0 0 6px rgba(255, 70, 70, 1),
+            0 0 14px rgba(210, 0, 0, 0.75);
+    }
+    .glow-label {
+        font-size: 9px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        opacity: 0.65;
+    }
+    .glow-value {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+    }
+    .glow-reset {
+        pointer-events: auto;
+        cursor: pointer;
+    }
+    .glow-reset:hover {
+        text-decoration: underline;
+    }
+
 
     .time {
         font-size: 11px;
