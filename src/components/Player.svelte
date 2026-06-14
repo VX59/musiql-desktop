@@ -164,8 +164,10 @@ function togglePlay() {
                         <div class="skip-marker" style="left: calc(2px + {s} * (100% - 4px))"></div>
                     {/each}
                 {/if}
+                <span class="track-glow">
+                    <span class="glow-value">{formatTime(currentTime)} / {formatTime(duration)}</span>
+                </span>
             </div>
-            <span class="time">{formatTime(currentTime)} / {formatTime(duration)}</span>
         </div>
     </div>
 
@@ -399,11 +401,19 @@ function togglePlay() {
         display: flex;
         align-items: center;
     }
-    .progress-container .slider { flex: 1; width: 100%; height: 38px; }
+    .progress-container .track-glow {
+        top: auto;
+        bottom: 6px;
+        left: auto;
+        right: 8px;
+        transform: none;
+        width: auto;
+    }
+    .progress-container .slider { flex: 1; width: 100%; height: 57px; }
 
     /* LCD screen style — progress bar only */
     .progress-container .slider::-webkit-slider-runnable-track {
-        height: 30px;
+        height: 45px;
         border-radius: 2px;
         background:
             repeating-linear-gradient(
@@ -418,14 +428,14 @@ function togglePlay() {
     }
     .progress-container .slider::-webkit-slider-thumb {
         width: 3px;
-        height: 36px;
+        height: 54px;
         border-radius: 1px;
-        margin-top: -3px;
+        margin-top: -5px;
         background: rgba(255, 255, 220, 0.95);
         box-shadow: 0 0 5px rgba(255,255,200,0.7);
     }
     .progress-container .slider::-moz-range-track {
-        height: 30px;
+        height: 45px;
         border-radius: 2px;
         background:
             repeating-linear-gradient(
@@ -440,7 +450,7 @@ function togglePlay() {
     }
     .progress-container .slider::-moz-range-thumb {
         width: 3px;
-        height: 36px;
+        height: 54px;
         border-radius: 1px;
         border: none;
         background: rgba(255, 255, 220, 0.95);
@@ -452,7 +462,7 @@ function togglePlay() {
         top: 50%;
         transform: translateY(-50%);
         width: 2px;
-        height: 28px;
+        height: 43px;
         background: rgba(255, 255, 200, 0.9);
         box-shadow: 0 0 3px rgba(255,255,150,0.8);
         pointer-events: none;
@@ -551,14 +561,13 @@ function togglePlay() {
     .glow-reset:hover {
         text-decoration: underline;
     }
-
-
-    .time {
-        font-size: 11px;
-        color: #888;
-        white-space: nowrap;
-        flex-shrink: 0;
+    .speed-wrap .track-glow {
+        text-shadow:
+            0 0 2px #fff,
+            0 0 6px rgba(70, 255, 100, 1),
+            0 0 14px rgba(0, 200, 50, 0.75);
     }
+
 
     .nav-btns {
         display: flex;

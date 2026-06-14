@@ -45,7 +45,13 @@
     ].filter(Boolean);
 
     function toggleLibrary() {
-        libraryOpen = !libraryOpen;
+        if (currentArtist || currentAlbum) {
+            currentArtist = null;
+            currentAlbum = null;
+            libraryOpen = true;
+        } else {
+            libraryOpen = !libraryOpen;
+        }
     }
 
     function startDrag(e, topId, bottomId) {
