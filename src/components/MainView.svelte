@@ -194,7 +194,7 @@
         flex: 1;
         display: flex;
         flex-direction: column;
-        padding: 16px 16px 0 16px;
+        padding: 0 16px 0 16px;
         min-height: 0;
         overflow-y: auto;
     }

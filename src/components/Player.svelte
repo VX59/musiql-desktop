@@ -14,6 +14,7 @@
     export let onAlbumClick = () => {};
 
     let audioEl;
+    let canvasEl;
     let paused = true;
     let currentTime = 0;
     let duration = 0;
@@ -23,6 +24,8 @@
     let showSkips = true;
     let playbackRate = 1;
     let _lastResetUri = null;
+    let waveformPeaks = [];
+    let _waveformUri = null;
 
     $: {
         const uri = $currentTrack?.uri ?? null;
@@ -70,6 +73,51 @@
         audioEl.playbackRate = 1;
     }
 
+    async function computeWaveform(src) {
+        waveformPeaks = [];
+        try {
+            const res = await fetch(src);
+            const buf = await res.arrayBuffer();
+            const audioCtx = new AudioContext();
+            const decoded = await audioCtx.decodeAudioData(buf);
+            const channel = decoded.getChannelData(0);
+            const buckets = 600;
+            const step = Math.floor(channel.length / buckets);
+            const peaks = new Array(buckets);
+            for (let i = 0; i < buckets; i++) {
+                let max = 0;
+                for (let j = 0; j < step; j++) {
+                    const v = Math.abs(channel[i * step + j] || 0);
+                    if (v > max) max = v;
+                }
+                peaks[i] = max;
+            }
+            waveformPeaks = peaks;
+            audioCtx.close();
+        } catch (_) {
+            waveformPeaks = [];
+        }
+        drawWaveform();
+    }
+
+    function drawWaveform() {
+        if (!canvasEl) return;
+        const W = canvasEl.width;
+        const H = canvasEl.height;
+        const ctx = canvasEl.getContext('2d');
+        ctx.clearRect(0, 0, W, H);
+        if (!waveformPeaks.length) return;
+        const playedX = duration > 0 ? (currentTime / duration) * W : 0;
+        const barW = W / waveformPeaks.length;
+        for (let i = 0; i < waveformPeaks.length; i++) {
+            const x = i * barW;
+            const barH = Math.max(1, waveformPeaks[i] * H * 0.88);
+            const y = (H - barH) / 2;
+            ctx.fillStyle = x < playedX ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.12)';
+            ctx.fillRect(x, y, Math.max(1, barW - 0.5), barH);
+        }
+    }
+
 function togglePlay() {
         if (audioEl.paused) audioEl.play();
         else audioEl.pause();
@@ -96,15 +144,35 @@ function togglePlay() {
         registerAudioElement(audioEl);
 
         audioEl.addEventListener('ended', playNextFromQueue);
-        audioEl.addEventListener('timeupdate', () => { currentTime = audioEl.currentTime; });
-        audioEl.addEventListener('loadedmetadata', () => { duration = audioEl.duration; });
+        audioEl.addEventListener('timeupdate', () => {
+            currentTime = audioEl.currentTime;
+            drawWaveform();
+        });
+        audioEl.addEventListener('loadedmetadata', () => {
+            duration = audioEl.duration;
+            const src = audioEl.src;
+            if (src && src !== _waveformUri) {
+                _waveformUri = src;
+                computeWaveform(src);
+            }
+        });
         audioEl.addEventListener('play', () => { paused = false; });
         audioEl.addEventListener('pause', () => { paused = true; });
 
         window.sample = playNextFromQueue;
 
+        const ro = new ResizeObserver(() => {
+            if (!canvasEl) return;
+            const rect = canvasEl.getBoundingClientRect();
+            canvasEl.width = Math.round(rect.width);
+            canvasEl.height = Math.round(rect.height);
+            drawWaveform();
+        });
+        setTimeout(() => { if (canvasEl) ro.observe(canvasEl); }, 0);
+
         return () => {
             audioEl.removeEventListener('ended', playNextFromQueue);
+            ro.disconnect();
         };
     });
 </script>
@@ -159,6 +227,7 @@ function togglePlay() {
                     value={currentTime}
                     on:input={seek}
                 />
+                <canvas bind:this={canvasEl} class="waveform-canvas"></canvas>
                 {#if showSkips}
                     {#each skips as s}
                         <div class="skip-marker" style="left: calc(2px + {s} * (100% - 4px))"></div>
@@ -229,9 +298,9 @@ function togglePlay() {
         width: 100%;
         display: grid;
         grid-template-columns: minmax(160px, 320px) 1fr auto;
-        align-items: center;
+        align-items: stretch;
         gap: 16px;
-        padding: 12px 20px;
+        padding: 0 8px;
         background: #efefed;
         box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.12);
         z-index: 1000;
@@ -243,6 +312,7 @@ function togglePlay() {
         display: flex;
         align-items: center;
         gap: 10px;
+        padding: 12px 0;
     }
     .album-thumb {
         width: 44px;
@@ -343,7 +413,8 @@ function togglePlay() {
     .progress-wrap {
         flex: 1;
         display: flex;
-        align-items: center;
+        align-items: stretch;
+        align-self: stretch;
         gap: 8px;
         min-width: 0;
     }
@@ -353,6 +424,8 @@ function togglePlay() {
         -webkit-appearance: none;
         appearance: none;
         height: 30px;
+        margin: 0;
+        padding: 0;
         background: transparent;
         outline: none;
         cursor: pointer;
@@ -398,8 +471,10 @@ function togglePlay() {
     .progress-container {
         position: relative;
         flex: 1;
+        height: 100%;
         display: flex;
         align-items: center;
+        overflow: hidden;
     }
     .progress-container .track-glow {
         top: auto;
@@ -409,11 +484,11 @@ function togglePlay() {
         transform: none;
         width: auto;
     }
-    .progress-container .slider { flex: 1; width: 100%; height: 57px; }
+    .progress-container .slider { flex: 1; width: 100%; height: 100%; }
 
     /* LCD screen style — progress bar only */
     .progress-container .slider::-webkit-slider-runnable-track {
-        height: 45px;
+        height: 100%;
         border-radius: 2px;
         background:
             repeating-linear-gradient(
@@ -421,21 +496,21 @@ function togglePlay() {
                 rgba(0,0,0,0.22) 0px, rgba(0,0,0,0.22) 1px,
                 transparent 1px, transparent 6px
             ),
-            linear-gradient(to right, #aaaaaa var(--fill), #1c1c1c var(--fill));
+            linear-gradient(to right, rgba(120, 120, 120, 0.5) var(--fill), #1c1c1c var(--fill));
         box-shadow:
             inset 0 0 0 1px rgba(0,0,0,0.6),
             inset 0 1px 3px rgba(0,0,0,0.4);
     }
     .progress-container .slider::-webkit-slider-thumb {
         width: 3px;
-        height: 54px;
+        height: 100%;
         border-radius: 1px;
-        margin-top: -5px;
+        margin-top: 0;
         background: rgba(255, 255, 220, 0.95);
         box-shadow: 0 0 5px rgba(255,255,200,0.7);
     }
     .progress-container .slider::-moz-range-track {
-        height: 45px;
+        height: 100%;
         border-radius: 2px;
         background:
             repeating-linear-gradient(
@@ -443,31 +518,40 @@ function togglePlay() {
                 rgba(0,0,0,0.22) 0px, rgba(0,0,0,0.22) 1px,
                 transparent 1px, transparent 6px
             ),
-            linear-gradient(to right, #aaaaaa var(--fill), #1c1c1c var(--fill));
+            linear-gradient(to right, rgba(120, 120, 120, 0.5) var(--fill), #1c1c1c var(--fill));
         box-shadow:
             inset 0 0 0 1px rgba(0,0,0,0.6),
             inset 0 1px 3px rgba(0,0,0,0.4);
     }
     .progress-container .slider::-moz-range-thumb {
         width: 3px;
-        height: 54px;
+        height: 100%;
         border-radius: 1px;
         border: none;
         background: rgba(255, 255, 220, 0.95);
         box-shadow: 0 0 5px rgba(255,255,200,0.7);
     }
 
+    .waveform-canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 2;
+        border-radius: 2px;
+    }
+
     .skip-marker {
         position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
+        top: 0;
         width: 2px;
-        height: 43px;
+        height: 100%;
         background: rgba(255, 255, 200, 0.9);
         box-shadow: 0 0 3px rgba(255,255,150,0.8);
         pointer-events: none;
         border-radius: 1px;
-        z-index: 1;
+        z-index: 3;
     }
     .vol-wrap, .speed-wrap {
         display: flex;
@@ -503,7 +587,7 @@ function togglePlay() {
                 rgba(0,0,0,0.22) 0px, rgba(0,0,0,0.22) 1px,
                 transparent 1px, transparent 6px
             ),
-            linear-gradient(to right, #aaaaaa var(--fill), #1c1c1c var(--fill));
+            linear-gradient(to right, rgba(120, 120, 120, 0.5) var(--fill), #1c1c1c var(--fill));
         box-shadow:
             inset 0 0 0 1px rgba(0,0,0,0.6),
             inset 0 1px 3px rgba(0,0,0,0.4);
@@ -518,7 +602,7 @@ function togglePlay() {
                 rgba(0,0,0,0.22) 0px, rgba(0,0,0,0.22) 1px,
                 transparent 1px, transparent 6px
             ),
-            linear-gradient(to right, #aaaaaa var(--fill), #1c1c1c var(--fill));
+            linear-gradient(to right, rgba(120, 120, 120, 0.5) var(--fill), #1c1c1c var(--fill));
         box-shadow:
             inset 0 0 0 1px rgba(0,0,0,0.6),
             inset 0 1px 3px rgba(0,0,0,0.4);
@@ -574,6 +658,7 @@ function togglePlay() {
         align-items: center;
         gap: 4px;
         flex-shrink: 0;
+        padding: 12px 0;
     }
 
     .ctrl-btn {

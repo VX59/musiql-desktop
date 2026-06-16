@@ -33,7 +33,7 @@
     .nav-buttons {
         display: flex;
         gap: 4px;
-        padding: 10px 16px;
+        padding: 10px 8px;
         background: #efefed;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
         position: sticky;
