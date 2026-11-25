@@ -15,7 +15,27 @@
     }
 
     async function copyApiToken() {
-        await navigator.clipboard.writeText(localStorage.getItem('token') ?? '');
+        const text = localStorage.getItem('token') ?? '';
+
+        if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(text);
+            return true;
+        }
+
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        let ok = false;
+        try {
+            ok = document.execCommand('copy');
+        } finally {
+            document.body.removeChild(ta);
+        }
+        return ok;
     }
 </script>
 

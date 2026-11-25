@@ -89,7 +89,7 @@
     async function loadLibrary() {
         currentArtist = null;
         currentAlbum = null;
-        searchResults = await searchAdvanced('@library', 0, 0);
+        searchResults = await searchAdvanced('/library', 0, 0);
     }
 
     async function handleSearch(term) {
